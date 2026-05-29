@@ -1,0 +1,23 @@
+{
+  "name": "codex-project-qiankun-react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.4",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n main,react-dashboard -c cyan,green \"pnpm --filter @codex-project/main dev\" \"pnpm --filter @codex-project/react-dashboard dev\"",
+    "dev:main": "pnpm --filter @codex-project/main dev",
+    "dev:react-dashboard": "pnpm --filter @codex-project/react-dashboard dev",
+    "build": "pnpm -r build",
+    "preview:main": "pnpm --filter @codex-project/main preview",
+    "preview:react-dashboard": "pnpm --filter @codex-project/react-dashboard preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "vite": "^5.4.11"
+  }
+}

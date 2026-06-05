@@ -1,0 +1,51 @@
+/**
+ * 物理 / 虚机 / 容器策略页共用布局类
+ * 由各 *Strategy.vue 中 import（非 scoped，类名勿与业务页其它模块冲突）
+ */
+.strategy-panel {
+  padding: 4px 0 8px;
+}
+.form-card {
+  position: relative;
+  padding: 24px;
+  background: var(--el-fill-color-blank);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: var(--el-border-radius-base);
+}
+.form-card-toolbar {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
+}
+.form-card-toolbar-divider {
+  display: none;
+}
+.form-card .strategy-form {
+  padding-top: 0;
+}
+.form-block {
+  padding: 4px 0;
+}
+.block-divider {
+  height: 1px;
+  margin: 20px 0;
+  background: var(--el-border-color-lighter);
+}
+.strategy-form :deep(.el-form-item) {
+  margin-bottom: 18px;
+}
+.strategy-form :deep(.el-form-item:last-child) {
+  margin-bottom: 0;
+}
+.block-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+  line-height: 1.4;
+}
+.field-input--policy-name {
+  max-width: 480px;
+  width: 100%;
+}

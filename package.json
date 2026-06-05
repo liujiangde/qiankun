@@ -8,12 +8,14 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n main,react-dashboard -c cyan,green \"pnpm --filter @codex-project/main dev\" \"pnpm --filter @codex-project/react-dashboard dev\"",
+    "dev": "concurrently -n main,react-dashboard,vue3-app -c cyan,green,magenta \"pnpm --filter @codex-project/main dev\" \"pnpm --filter @codex-project/react-dashboard dev\" \"pnpm --filter @codex-project/vue3-app dev\"",
     "dev:main": "pnpm --filter @codex-project/main dev",
     "dev:react-dashboard": "pnpm --filter @codex-project/react-dashboard dev",
+    "dev:vue3-app": "pnpm --filter @codex-project/vue3-app dev",
     "build": "pnpm -r build",
     "preview:main": "pnpm --filter @codex-project/main preview",
-    "preview:react-dashboard": "pnpm --filter @codex-project/react-dashboard preview"
+    "preview:react-dashboard": "pnpm --filter @codex-project/react-dashboard preview",
+    "preview:vue3-app": "pnpm --filter @codex-project/vue3-app preview"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

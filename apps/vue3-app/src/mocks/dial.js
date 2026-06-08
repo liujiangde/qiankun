@@ -239,3 +239,18 @@ export const dialRuleMockRecords = [
     status: '已停止'
   }
 ]
+
+export const dialRuleAlertTagOptions = [
+  '所属规则',
+  '所属拨测池',
+  '拨测源ip',
+  '拨测源名称',
+  '超时时间',
+  '重试次数',
+  '目标对象类型',
+  '目标对象',
+  '告警压缩时间',
+  '所在区域',
+  '物理机所属室',
+  '物理机所属环境'
+]

@@ -55,11 +55,12 @@
 - 新增 `src/config/mock.js` 集中管理 mock 环境变量开关，页面不再重复实现 `envBool`。
 - 新增 `src/mocks/dial.js` 和 `src/mocks/trafficForwarding.js`，隔离拨测告警、流量转发告警、告警规则、标签和分组下拉 mock 数据。
 - 补充 `src/mocks/probeGroup.js`，并将拨测规则、流量转发节点、探针分组的静态列表数据从页面迁移到 mock 模块。
+- 拨测规则管理页的查询、启停、删除、新增、编辑、告警标签和连通性测试模拟接口迁移到 `src/api/dial.js`。
 
 仍待处理：
 
 - 更细的 Vue 子应用首屏加载优化。
-- 剩余模拟接口函数和 TODO 的进一步隔离。
+- 拨测源、拨测池、流量转发节点、探针分组等剩余模拟接口函数和 TODO 的进一步隔离。
 - ESLint 和 Prettier。
 
 ## 阶段一：运行稳定性
@@ -154,6 +155,7 @@
   - [x] `src/api/dial.js`
   - [x] `src/api/probeGroup.js`
   - [x] `src/api/trafficForwarding.js`
+  - [x] 拨测规则管理页模拟 API
 - [ ] 替换模拟接口和 TODO，或将 mock 逻辑隔离到明确的 mock 模块中。
 
 ### 验收标准

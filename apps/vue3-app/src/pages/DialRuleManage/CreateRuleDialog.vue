@@ -2,6 +2,7 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CircleCheck } from '@element-plus/icons-vue'
+import { queryDialRuleAlertTagsApi, testDialRuleConnectivityApi } from '@/api/dial'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -235,32 +236,10 @@ function buildPayload() {
   }
 }
 
-function queryAlertTagsApi() {
-  // 接真实接口时：替换为标签列表接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        '所属规则',
-        '所属拨测池',
-        '拨测源ip',
-        '拨测源名称',
-        '超时时间',
-        '重试次数',
-        '目标对象类型',
-        '目标对象',
-        '告警压缩时间',
-        '所在区域',
-        '物理机所属室',
-        '物理机所属环境'
-      ])
-    }, 200)
-  })
-}
-
 async function fetchAlertTags() {
   alertTagsLoading.value = true
   try {
-    const res = await queryAlertTagsApi()
+    const res = await queryDialRuleAlertTagsApi()
     alertTags.value = Array.isArray(res) ? res : []
   } finally {
     alertTagsLoading.value = false
@@ -271,18 +250,6 @@ function onAppendTag(tag) {
   const t = String(tag ?? '').trim()
   if (!t) return
   form.alertContent += `{${t}}`
-}
-
-function testConnectivityApi(params) {
-  // 接真实接口时：替换为连通性测试接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        message: `目标 ${params.target} 连通性测试通过`
-      })
-    }, 600)
-  })
 }
 
 watch(
@@ -325,7 +292,7 @@ async function onTest() {
   if (!ok) return
   testing.value = true
   try {
-    const res = await testConnectivityApi(buildPayload())
+    const res = await testDialRuleConnectivityApi(buildPayload())
     if (res?.success === false) {
       ElMessage.error(res?.message || '连通性测试失败')
       return

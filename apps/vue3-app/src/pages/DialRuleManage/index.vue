@@ -3,7 +3,14 @@ import { ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Upload, EditPen, Delete } from '@element-plus/icons-vue'
 import CreateRuleDialog from './CreateRuleDialog.vue'
-import { dialRuleMockRecords } from '@/mocks/dial'
+import {
+  createDialRuleApi,
+  deleteDialRuleApi,
+  queryDialRuleListApi,
+  startDialRuleApi,
+  stopDialRuleApi,
+  updateDialRuleApi
+} from '@/api/dial'
 
 const poolOptions = [
   { label: '拨测池A1', value: '拨测池A1' },
@@ -29,74 +36,6 @@ const statusFilterOptions = [
 const keyword = ref('')
 const methodFilter = ref('')
 const statusFilter = ref('')
-
-const allRules = ref(dialRuleMockRecords.map((record) => ({ ...record })))
-
-/** 拨测规则列表接口（后端分页）。接真实接口时替换为 request/axios，保留入参/出参结构即可 */
-function queryDialRuleListApi(params) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const k = String(params.keyword ?? '').trim()
-      const method = String(params.method ?? '')
-      const status = String(params.status ?? '')
-      const p = Number(params.page ?? 1)
-      const ps = Number(params.pageSize ?? 10)
-
-      const filtered = allRules.value.filter((r) => {
-        const okMethod = !method || r.method === method
-        const okStatus = !status || r.status === status
-        const okKeyword = !k || r.pool.includes(k) || r.target.includes(k) || r.creator.includes(k)
-        return okMethod && okStatus && okKeyword
-      })
-
-      const start = (p - 1) * ps
-      resolve({ list: filtered.slice(start, start + ps), total: filtered.length })
-    }, 300)
-  })
-}
-
-function startDialRuleApi(id) {
-  // 接真实接口时：替换为启动规则接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const rule = allRules.value.find((item) => item.id === id)
-      if (rule) rule.status = '运行中'
-      resolve(true)
-    }, 300)
-  })
-}
-
-function stopDialRuleApi(id) {
-  // 接真实接口时：替换为停止规则接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const rule = allRules.value.find((item) => item.id === id)
-      if (rule) rule.status = '已停止'
-      resolve(true)
-    }, 300)
-  })
-}
-
-function deleteDialRuleApi(id) {
-  // 接真实接口时：替换为删除规则接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      allRules.value = allRules.value.filter((r) => r.id !== id)
-      resolve(true)
-    }, 300)
-  })
-}
-
-function createDialRuleApi(payload) {
-  // 接真实接口时：替换为创建规则接口调用
-  // 这里返回新建后的 id，其它字段仍由父页面组装（creator/updatedAt/status 等）
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const id = allRules.value.length ? Math.max(...allRules.value.map((r) => r.id)) + 1 : 1
-      resolve({ id })
-    }, 300)
-  })
-}
 
 const page = ref(1)
 const pageSize = ref(5)
@@ -140,18 +79,6 @@ watch([keyword, methodFilter, statusFilter], () => {
 const selection = ref([])
 function onSelectionChange(rows) {
   selection.value = rows
-}
-
-function getTodayString() {
-  const today = new Date()
-  const yyyy = String(today.getFullYear())
-  const mm = String(today.getMonth() + 1).padStart(2, '0')
-  const dd = String(today.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
-}
-
-function formatTimeout(timeoutMs) {
-  return timeoutMs >= 1000 ? `${Math.round(timeoutMs / 1000)}秒` : `${timeoutMs}ms`
 }
 
 function onSearch() {
@@ -223,52 +150,22 @@ function onCreate() {
 }
 
 async function onCreateSubmit(payload) {
-  const timeoutStr = formatTimeout(payload.timeoutMs)
-  const updatedAt = getTodayString()
   try {
-    const res = await createDialRuleApi(payload)
-    const id = res?.id
-    allRules.value.unshift({
-      id,
-      pool: payload.pool,
-      method: payload.method,
-      target: payload.target,
-      cron: payload.cron,
-      timeout: timeoutStr,
-      retry: payload.retry,
-      isOpen: payload.isOpen,
-      alertCondition: payload.alertCondition,
-      alertContent: payload.alertContent,
-      compressTime: payload.compressTime,
-      creator: '当前用户',
-      updatedAt,
-      status: '已停止'
-    })
+    await createDialRuleApi(payload)
     ElMessage.success('创建成功')
     page.value = 1
     fetchList()
   } catch (_) {}
 }
 
-function onEditSubmit(payload) {
-  const idx = allRules.value.findIndex((r) => r.id === editInitialData.value?.id)
-  if (idx < 0) return
-  allRules.value[idx] = {
-    ...allRules.value[idx],
-    pool: payload.pool,
-    method: payload.method,
-    target: payload.target,
-    cron: payload.cron,
-    timeout: formatTimeout(payload.timeoutMs),
-    retry: payload.retry,
-    isOpen: payload.isOpen,
-    alertCondition: payload.alertCondition,
-    alertContent: payload.alertContent,
-    compressTime: payload.compressTime,
-    updatedAt: getTodayString()
-  }
-  ElMessage.success('修改成功')
-  fetchList()
+async function onEditSubmit(payload) {
+  const id = editInitialData.value?.id
+  if (!id) return
+  try {
+    await updateDialRuleApi(id, payload)
+    ElMessage.success('修改成功')
+    fetchList()
+  } catch (_) {}
 }
 
 function onBatchExport() {

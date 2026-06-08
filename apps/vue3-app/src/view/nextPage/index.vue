@@ -10,16 +10,15 @@ import {
   editTfAlarmRuleApi,
   enableTfAlarmRuleApi,
   fetchTfAlarmRuleListApi
-} from './api'
-
-function envBool(key, fallback = false) {
-  const raw = import.meta.env?.[key]
-  if (raw === undefined) return fallback
-  return String(raw).toLowerCase() === 'true'
-}
+} from '@/api/trafficForwarding'
+import { mockSwitches } from '@/config/mock'
+import {
+  tfAlarmRuleImportResult,
+  tfAlarmRuleMockRecords
+} from '@/mocks/trafficForwarding'
 
 /** 为 true 时列表走本地 mock；优先读环境变量 */
-const USE_MOCK = envBool('VITE_USE_MOCK_NEXT_PAGE_LIST', true)
+const USE_MOCK = mockSwitches.tfAlarmRuleList
 const PAGE_SIZE_OPTIONS = [10, 20, 50]
 const DEFAULT_PAGE_SIZE = 10
 
@@ -65,13 +64,7 @@ const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
 
-const importResultData = {
-  total: 10,
-  created: 0,
-  updated: 0,
-  failed: 3,
-  reasons: ['第3行,拨测池[拨测池1]不存在', '第4行,拨测方式不能为空', '第4行,规则名称不能为空','第4行,规则名称不能为空','第4行,规则名称不能为空','第4行,规则名称不能为空','第4行,规则名称不能为空','第4行,规则名称不能为空','第4行,规则名称不能为空']
-}
+const importResultData = tfAlarmRuleImportResult
 
 function clearFilterWatchTimer() {
   if (!filterWatchTimer) return
@@ -79,53 +72,7 @@ function clearFilterWatchTimer() {
   filterWatchTimer = null
 }
 
-/** USE_MOCK 为 true 时的列表假数据 */
-const mockRecords = [
-  {
-    id: 101,
-    ruleName: '生产组核心机房告警',
-    alarmContent: '生产分组核心物理机异常，请立即排查',
-    alertCondition:
-      '{"ruleGroup":[{"groupId":"1","agentId":"1,2,3"},{"groupId":"2","agentId":"7"}],"relation":"OR"}',
-    abnormalDuration: 10,
-    compressTime: 30,
-    status: 1,
-    lastAlarmTime: '2026-05-06 14:20:00',
-    createTime: '2026-04-30 09:00:00',
-    createUser: 'admin',
-    updateTime: '2026-05-06 14:21:00',
-    updateUser: 'admin'
-  },
-  {
-    id: 102,
-    ruleName: '测试组单机告警',
-    alarmContent: '测试环境单机异常持续，请关注',
-    alertCondition: '{"ruleGroup":[{"groupId":"3","agentId":"5"}],"relation":"OR"}',
-    abnormalDuration: 5,
-    compressTime: 15,
-    status: 0,
-    lastAlarmTime: '2026-05-05 11:42:00',
-    createTime: '2026-04-28 16:12:00',
-    createUser: 'ops',
-    updateTime: '2026-05-05 11:50:00',
-    updateUser: 'ops'
-  },
-  {
-    id: 103,
-    ruleName: '混合分组兜底告警',
-    alarmContent: '多个分组任一命中即触发告警',
-    alertCondition:
-      '{"ruleGroup":[{"groupId":"10","agentId":"11,12"},{"groupId":"20"},{"groupId":"30","agentId":"31"}],"relation":"OR"}',
-    abnormalDuration: 8,
-    compressTime: 20,
-    status: 1,
-    lastAlarmTime: '2026-05-04 09:18:00',
-    createTime: '2026-04-27 10:30:00',
-    createUser: 'admin',
-    updateTime: '2026-05-04 09:19:00',
-    updateUser: 'admin'
-  }
-]
+const mockRecords = tfAlarmRuleMockRecords
 
 function toTimeMs(v) {
   const t = new Date(v).getTime()

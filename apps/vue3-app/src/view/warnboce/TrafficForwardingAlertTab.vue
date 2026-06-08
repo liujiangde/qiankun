@@ -2,20 +2,15 @@
 import { reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
+import { fetchTrafficForwardAlertHistoryApi } from '@/api/trafficForwarding'
+import { mockSwitches } from '@/config/mock'
+import { trafficForwardingAlertMockRecords } from '@/mocks/trafficForwarding'
 
 /**
  * 流量转发告警历史列表（后端分页）。
  * 联调前请与 Swagger 对齐路径与参数名；为 true 时使用本地 mock。
  */
-const TF_FORWARD_ALERT_LIST_API = '/tfTrafficForwardAlert/history/list'
-
-function envBool(key, fallback = true) {
-  const raw = import.meta.env?.[key]
-  if (raw === undefined) return fallback
-  return String(raw).toLowerCase() === 'true'
-}
-
-const USE_MOCK = envBool('VITE_USE_MOCK_TF_FORWARDING_ALERT', true)
+const USE_MOCK = mockSwitches.trafficForwardingAlert
 const PAGE_SIZE_OPTIONS = [16, 32, 64]
 const DEFAULT_PAGE_SIZE = 16
 
@@ -65,88 +60,7 @@ const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
 
-const mockRecords = [
-  {
-    id: 101,
-    alarmContent: '转发链路 A→B 丢包率超阈值',
-    ruleName: '核心链路转发监控',
-    hostIp: '10.12.0.21',
-    hostName: 'fwd-core-01',
-    abnormalStatus: 'ALERTING',
-    abnormalTime: '2026-05-12 09:15:00',
-    alarmTime: '2026-05-12 09:18:22'
-  },
-  {
-    id: 102,
-    alarmContent: '会话表项增长异常',
-    ruleName: '会话容量告警',
-    hostIp: '10.12.0.22',
-    hostName: 'fwd-edge-sz',
-    abnormalStatus: 'UNACK',
-    abnormalTime: '2026-05-11 14:02:00',
-    alarmTime: '2026-05-11 14:05:10'
-  },
-  {
-    id: 103,
-    alarmContent: '南北向转发延迟升高',
-    ruleName: '时延类转发规则',
-    hostIp: '172.16.8.5',
-    hostName: 'gw-north-03',
-    abnormalStatus: 'RECOVERED',
-    abnormalTime: '2026-05-10 22:40:00',
-    alarmTime: '2026-05-10 22:42:00'
-  },
-  {
-    id: 104,
-    alarmContent: 'VXLAN 隧道 down',
-    ruleName: '隧道可用性',
-    hostIp: '10.20.1.1',
-    hostName: 'fwd-vxlan-01',
-    abnormalStatus: 'ALERTING',
-    abnormalTime: '2026-05-10 08:00:00',
-    alarmTime: '2026-05-10 08:01:30'
-  },
-  {
-    id: 105,
-    alarmContent: '策略路由切换失败',
-    ruleName: '策略路由监控',
-    hostIp: '10.20.1.2',
-    hostName: 'fwd-policy-02',
-    abnormalStatus: 'RECOVERED',
-    abnormalTime: '2026-05-09 16:20:00',
-    alarmTime: '2026-05-09 16:25:00'
-  },
-  {
-    id: 106,
-    alarmContent: 'NAT 端口耗尽预警',
-    ruleName: 'NAT 资源',
-    hostIp: '192.168.1.1',
-    hostName: 'nat-gw-home',
-    abnormalStatus: 'UNACK',
-    abnormalTime: '2026-05-09 11:00:00',
-    alarmTime: '2026-05-09 11:02:00'
-  },
-  {
-    id: 107,
-    alarmContent: '跨机房转发中断',
-    ruleName: '双活转发',
-    hostIp: '10.8.0.10',
-    hostName: 'fwd-dc-a',
-    abnormalStatus: 'ALERTING',
-    abnormalTime: '2026-05-08 19:30:00',
-    alarmTime: '2026-05-08 19:31:00'
-  },
-  {
-    id: 108,
-    alarmContent: 'QoS 队列溢出',
-    ruleName: 'QoS 监控',
-    hostIp: '10.8.0.11',
-    hostName: 'fwd-dc-b',
-    abnormalStatus: 'RECOVERED',
-    abnormalTime: '2026-05-07 10:10:00',
-    alarmTime: '2026-05-07 10:12:00'
-  }
-]
+const mockRecords = trafficForwardingAlertMockRecords
 
 function toTimeMs(v) {
   const t = new Date(String(v).replace(/-/g, '/')).getTime()
@@ -160,23 +74,23 @@ function formatStatusText(code) {
 function appendRangeParams(params, prefix, range) {
   if (!Array.isArray(range) || range.length !== 2) return
   const [a, b] = range
-  if (a) params.set(`${prefix}From`, String(a))
-  if (b) params.set(`${prefix}To`, String(b))
+  if (a) params[`${prefix}From`] = String(a)
+  if (b) params[`${prefix}To`] = String(b)
 }
 
 function buildListQueryParams() {
-  const params = new URLSearchParams({
+  const params = {
     current: String(page.value),
     size: String(pageSize.value)
-  })
+  }
   const keyword = String(query.keyword ?? '').trim()
-  if (keyword) params.set('keyword', keyword)
+  if (keyword) params.keyword = keyword
   const st = String(query.abnormalStatus ?? '').trim()
-  if (st) params.set('abnormalStatus', st)
+  if (st) params.abnormalStatus = st
   appendRangeParams(params, 'abnormalTime', query.abnormalTimeRange)
   appendRangeParams(params, 'alarmTime', query.alarmTimeRange)
-  if (query.orderBy) params.set('orderBy', query.orderBy)
-  if (query.order) params.set('order', query.order)
+  if (query.orderBy) params.orderBy = query.orderBy
+  if (query.order) params.order = query.order
   return params
 }
 
@@ -190,16 +104,8 @@ function normalizeListResponse(raw) {
 }
 
 async function queryListFromBackend() {
-  const q = buildListQueryParams()
-  const response = await fetch(`${TF_FORWARD_ALERT_LIST_API}?${q.toString()}`, { method: 'GET' })
-  if (!response.ok) {
-    throw new Error(`查询流量转发告警失败: HTTP ${response.status}`)
-  }
-  const ct = response.headers.get('content-type') || ''
-  if (!ct.includes('application/json')) {
-    throw new Error('接口返回非 JSON，请检查代理或接口地址')
-  }
-  const data = await response.json()
+  // 页面不直接 fetch，便于统一复用 request 的 baseURL、token 和错误处理。
+  const data = await fetchTrafficForwardAlertHistoryApi(buildListQueryParams())
   return normalizeListResponse(data)
 }
 

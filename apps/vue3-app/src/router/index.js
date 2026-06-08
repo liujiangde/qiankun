@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import HelloWorld from '../components/HelloWorld.vue'
 import DialTabsLayout from '../pages/DialTabsLayout.vue'
 
@@ -16,6 +16,7 @@ const TrafficWarning = () => import('../view/warnboce/index.vue')
 const TrafficForwardingAlert = () => import('../view/warnboce/TrafficForwardingAlertTab.vue')
 const NextPage = () => import('../view/nextPage/index.vue')
 
+// 大多数业务页面使用动态 import，访问对应路由时才加载页面代码。
 export const routes = [
   { path: '/', name: 'home', component: HelloWorld },
   { path: '/demo', name: 'demo', component: DemoPanel },
@@ -52,9 +53,10 @@ export const routes = [
   { path: '/nextPage', name: 'nextPage', component: NextPage },
 ]
 
-export function createAppRouter(base = '/') {
+export function createAppRouter({ base = '/', useHash = false } = {}) {
+  // qiankun 模式下使用 hash history，独立运行时仍使用 history，兼顾隔离和开发体验。
   return createRouter({
-    history: createWebHistory(base),
+    history: useHash ? createWebHashHistory(base) : createWebHistory(base),
     routes
   })
 }

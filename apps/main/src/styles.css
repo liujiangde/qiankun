@@ -145,6 +145,11 @@ h1 {
   color: #14532d;
 }
 
+.status-error {
+  border-color: #f1a4a4;
+  color: #9f1239;
+}
+
 .overview {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -185,6 +190,22 @@ h1 {
 
 #micro-app-container {
   min-height: 520px;
+}
+
+.micro-feedback {
+  display: grid;
+  gap: 6px;
+  border: 1px solid #f1a4a4;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #9f1239;
+  padding: 14px 16px;
+}
+
+.micro-feedback span {
+  color: #5f2632;
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 760px) {

@@ -2,11 +2,12 @@
 import { reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, WarningFilled } from '@element-plus/icons-vue'
+import { fetchTbDetectionAlertListApi } from '@/api/dial'
+import { mockSwitches } from '@/config/mock'
+import { tbDetectionAlertMockRecords } from '@/mocks/dial'
 
-/** 拨测告警列表接口（Swagger: GET /tbDetectionAlert/list） */
-const TB_ALERT_LIST_API = '/tbDetectionAlert/list'
 /** 本地联调开关：true 使用 mock，false 走后端接口 */
-const USE_MOCK = false
+const USE_MOCK = mockSwitches.tbDetectionAlert
 const PAGE_SIZE_OPTIONS = [16, 32, 64]
 const DEFAULT_PAGE_SIZE = 16
 
@@ -43,63 +44,7 @@ const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
 
-const mockRecords = [
-  {
-    id: 1,
-    content: '测试告警',
-    createTime: '2026-04-22T18:00:00',
-    resultId: null,
-    ruleId: 1,
-    managementIP: '172.16.1.21',
-    target: '147.95.205.11:22',
-    ruleName: '测试规则',
-    alertCondition: 'all'
-  },
-  {
-    id: 2,
-    content: '端口可达性波动',
-    createTime: '2026-04-21T15:20:00',
-    resultId: 12001,
-    ruleId: 2,
-    managementIP: '172.16.1.22',
-    target: '10.20.0.8:443',
-    ruleName: '链路拨测规则',
-    alertCondition: 'any'
-  },
-  {
-    id: 3,
-    content: '响应延迟超阈值',
-    createTime: '2026-04-20T08:40:00',
-    resultId: null,
-    ruleId: 3,
-    managementIP: '172.16.1.23',
-    target: '10.20.0.9:80',
-    ruleName: 'HTTP 时延规则',
-    alertCondition: 'all'
-  },
-  {
-    id: 4,
-    content: 'DNS 拨测失败',
-    createTime: '2026-04-19T11:05:00',
-    resultId: 12002,
-    ruleId: 4,
-    managementIP: '172.16.1.24',
-    target: '8.8.8.8:53',
-    ruleName: 'DNS 可用性规则',
-    alertCondition: 'any'
-  },
-  {
-    id: 5,
-    content: 'SSH 连通性异常',
-    createTime: '2026-04-18T22:12:00',
-    resultId: null,
-    ruleId: 5,
-    managementIP: '172.16.1.25',
-    target: '192.168.100.10:22',
-    ruleName: '主机 SSH 规则',
-    alertCondition: 'all'
-  }
-]
+const mockRecords = tbDetectionAlertMockRecords
 
 function toTimeMs(v) {
   const t = new Date(v).getTime()
@@ -108,17 +53,17 @@ function toTimeMs(v) {
 
 function buildListQueryParams() {
   const [from = '', to = ''] = Array.isArray(query.dateRange) ? query.dateRange : []
-  const params = new URLSearchParams({
+  const params = {
     current: String(page.value),
     size: String(pageSize.value),
     from,
     to
-  })
+  }
 
   const keyword = String(query.keyword ?? '').trim()
-  if (keyword) params.set('query', keyword)
-  if (query.sortField) params.set('orderBy', query.sortField)
-  if (query.sortOrder) params.set('order', query.sortOrder)
+  if (keyword) params.query = keyword
+  if (query.sortField) params.orderBy = query.sortField
+  if (query.sortOrder) params.order = query.sortOrder
 
   return params
 }
@@ -157,18 +102,8 @@ function normalizeListResponse(raw) {
 }
 
 async function queryTbAlertListFromBackend() {
-  const params = buildListQueryParams()
-  const response = await fetch(`${TB_ALERT_LIST_API}?${params.toString()}`, {
-    method: 'GET'
-  })
-  if (!response.ok) {
-    throw new Error(`查询拨测告警失败: HTTP ${response.status}`)
-  }
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) {
-    throw new Error('接口返回非 JSON，请检查接口地址或本地代理配置')
-  }
-  const data = await response.json()
+  // 页面负责把筛选态转换成后端参数，实际 HTTP 调用交给 src/api/dial.js。
+  const data = await fetchTbDetectionAlertListApi(buildListQueryParams())
   return normalizeListResponse(data)
 }
 

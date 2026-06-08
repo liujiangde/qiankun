@@ -1,7 +1,11 @@
 <script setup>
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { Plus, FullScreen } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import {
+  queryDetectionResultLineApi,
+  queryDetectionTimeSpentLineApi
+} from '@/api/dial'
+import echarts from '@/utils/echarts'
 
 const ruleOptions = ref([])
 const poolOptions = ref([])
@@ -50,34 +54,6 @@ const ruleFilter = ref('')
 const poolFilter = ref('')
 const sourceFilter = ref('')
 const dateRange = ref([])
-
-// 拨测结果折线图：GET /cloudmonitor/tbDetectionResult/resultLine
-// 拨测耗时折线图：GET /cloudmonitor/tbDetectionResult/timeSpentLine
-// 必填参数：from、to(YYYY-MM-DD)、ruleId(int)；可选：managementIp
-// 返回格式：data 是 { [managementIp]: [{ managementIp, time, value }, ...] }
-function buildQuery(params) {
-  const search = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') return
-    search.append(key, String(value))
-  })
-  return search.toString()
-}
-
-async function fetchDetectionLine(path, params) {
-  const url = `/cloudmonitor/tbDetectionResult/${path}?${buildQuery(params)}`
-  const res = await fetch(url, { method: 'GET', headers: { Accept: '*/*' } })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const json = await res.json()
-  if (json && json.success === false) {
-    throw new Error(json.msg || '请求失败')
-  }
-  const data = json?.data
-  return data && typeof data === 'object' ? data : {}
-}
-
-const queryResultLineApi = (params) => fetchDetectionLine('resultLine', params)
-const queryTimeSpentLineApi = (params) => fetchDetectionLine('timeSpentLine', params)
 
 const chartSuccessData = ref({})
 const chartResponseData = ref({})
@@ -220,8 +196,9 @@ async function fetchChartData() {
   chartLoading.value = true
   try {
     const [resultData, timeSpentData] = await Promise.all([
-      queryResultLineApi(params),
-      queryTimeSpentLineApi(params)
+      // 两张图的接口参数一致，放在同一个 Promise.all 里并行请求。
+      queryDetectionResultLineApi(params),
+      queryDetectionTimeSpentLineApi(params)
     ])
     if (curSeq !== chartReqSeq.value) return
     applyChartData(resultData, timeSpentData)

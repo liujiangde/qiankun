@@ -1,6 +1,14 @@
 node_modules
 dist
 .DS_Store
+.pnpm-store/
+*.zip
+apps/**/dist/
+apps/**/node_modules/
+playwright-report/
+test-results/
+apps/**/.DS_Store
+apps/**/.pnpm-store/
 .env.local
 .env.*.local
 npm-debug.log*

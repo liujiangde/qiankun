@@ -48,7 +48,6 @@ function createDialPoolApi(payload) {
 }
 
 async function onConfirm() {
-  debugger
   const ok = await formRef?.validate?.().catch(() => false)
   if (!ok) return
   if (submitting.value) return
@@ -118,4 +117,3 @@ async function onConfirm() {
   margin-bottom: 22px;
 }
 </style>
-

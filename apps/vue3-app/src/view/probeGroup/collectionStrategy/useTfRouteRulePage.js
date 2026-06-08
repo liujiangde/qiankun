@@ -7,7 +7,7 @@ import {
   enableTfRouteRuleApi,
   disableTfRouteRuleApi,
   deleteTfRouteRuleApi
-} from './collectionStrategyApi.js'
+} from '@/api/probeGroup'
 
 /** 兼容历史详情结构：数组 / { list } / { policies } */
 function getSeedFromDetail(detail) {

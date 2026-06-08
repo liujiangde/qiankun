@@ -5,7 +5,7 @@
  * 根据父组件/路由传入的 nodeId 调用监控详情接口获取折线数据（当前先用 mock）。
  */
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import * as echarts from 'echarts'
+import echarts from '@/utils/echarts'
 
 const props = defineProps({
   /** 采集器节点 id，后续接监控查询接口时可作为入参 */

@@ -6,32 +6,19 @@ import {
   fetchTfAlarmRuleAlertContentTagsApi,
   fetchTfAlarmRulePhysicalMachinesApi,
   fetchTfAlarmRuleScopeGroupsApi
-} from './api'
-
-function envBool(key, fallback = false) {
-  const raw = import.meta.env?.[key]
-  if (raw === undefined) return fallback
-  return String(raw).toLowerCase() === 'true'
-}
+} from '@/api/trafficForwarding'
+import { mockSwitches } from '@/config/mock'
+import {
+  tfAlarmRuleAlertContentTagsRaw,
+  tfAlarmRulePhysicalMachinesByGroup,
+  tfAlarmRuleScopeGroups
+} from '@/mocks/trafficForwarding'
 
 /** 为 true 时使用本地标签数据，不请求接口；优先读环境变量 */
-const USE_MOCK_ALERT_CONTENT_TAGS = envBool('VITE_USE_MOCK_ALERT_CONTENT_TAGS', true)
+const USE_MOCK_ALERT_CONTENT_TAGS = mockSwitches.alertContentTags
 
 /** 为 true 时分组/物理机走本地 mock，优先读环境变量 */
-const USE_MOCK_SCOPE_APIS = envBool('VITE_USE_MOCK_SCOPE_APIS', false)
-
-const MOCK_SCOPE_GROUPS = [
-  { label: '生产环境分组', value: 'g-prod' },
-  { label: '测试环境分组', value: 'g-test' }
-]
-
-const MOCK_PHYSICAL_MACHINES_BY_GROUP = {
-  'g-prod': [
-    { label: 'PM-机房A-001', value: 'pm-a-001' },
-    { label: 'PM-机房A-002', value: 'pm-a-002' }
-  ],
-  'g-test': [{ label: 'PM-测试-101', value: 'pm-test-101' }]
-}
+const USE_MOCK_SCOPE_APIS = mockSwitches.scopeApis
 
 /**
  * 父组件通过 v-model 控制弹窗开关；关闭时父级可用 v-if 卸载本组件以清空内部状态。
@@ -131,7 +118,7 @@ async function loadScopeGroups(force = false) {
   try {
     if (USE_MOCK_SCOPE_APIS) {
       await delay(160)
-      groupOptions.value = MOCK_SCOPE_GROUPS.map((o) => ({ ...o }))
+      groupOptions.value = tfAlarmRuleScopeGroups.map((o) => ({ ...o }))
       scopeGroupsLoaded = true
       return
     }
@@ -169,7 +156,9 @@ async function loadPhysicalMachinesForGroup(groupId, force = false) {
   try {
     if (USE_MOCK_SCOPE_APIS) {
       await delay(160)
-      pmOptionsByGroup[groupId] = [...(MOCK_PHYSICAL_MACHINES_BY_GROUP[groupId] || [])]
+      pmOptionsByGroup[groupId] = [
+        ...(tfAlarmRulePhysicalMachinesByGroup[groupId] || [])
+      ]
       loadedPhysicalGroupIds[groupId] = true
       return
     }
@@ -189,20 +178,6 @@ async function loadPhysicalMachinesForGroup(groupId, force = false) {
 /** 标签列表：打开弹窗时从后端拉取（或由 mock 填充） */
 const contentTags = ref([])
 const contentTagsLoading = ref(false)
-
-/** 模拟后端返回：字符串 = 展示名与占位符一致；对象可区分 label / placeholder */
-const MOCK_ALERT_CONTENT_TAGS_RAW = [
-  '所属分组名称',
-  '物理机名称',
-  '物理机ip',
-  '异常状态持续时间',
-  '告警压缩时间',
-  '所在区域',
-  '物理机所属室',
-  '物理机所属环境',
-  { label: '拨测源名称', placeholder: '{{拨测源名称}}' },
-  { label: '超时时间(毫秒)', token: '{{timeoutMs}}' }
-]
 
 function extractTagListFromResponse(raw) {
   if (!raw) return []
@@ -265,7 +240,9 @@ async function loadContentTags() {
   try {
     if (USE_MOCK_ALERT_CONTENT_TAGS) {
       await delay(220)
-      contentTags.value = MOCK_ALERT_CONTENT_TAGS_RAW.map(normalizeContentTag).filter(Boolean)
+      contentTags.value = tfAlarmRuleAlertContentTagsRaw
+        .map(normalizeContentTag)
+        .filter(Boolean)
       return
     }
     const res = await fetchTfAlarmRuleAlertContentTagsApi()

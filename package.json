@@ -13,11 +13,15 @@
     "dev:react-dashboard": "pnpm --filter @codex-project/react-dashboard dev",
     "dev:vue3-app": "pnpm --filter @codex-project/vue3-app dev",
     "build": "pnpm -r build",
+    "test:e2e": "playwright test",
+    "check:services": "node scripts/check-services.mjs",
+    "check": "pnpm build && pnpm test:e2e",
     "preview:main": "pnpm --filter @codex-project/main preview",
     "preview:react-dashboard": "pnpm --filter @codex-project/react-dashboard preview",
     "preview:vue3-app": "pnpm --filter @codex-project/vue3-app preview"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
     "vite": "^5.4.11"

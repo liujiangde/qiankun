@@ -8,7 +8,7 @@
  */
 import { ElMessage } from 'element-plus'
 import { ref, watch } from 'vue'
-import { startCollectionStrategyApi } from './collectionStrategyApi.js'
+import { startCollectionStrategyApi } from '@/api/probeGroup'
 import { clonePolicyForApi } from './usePolicyTabs.js'
 
 /** 保存时校验未通过 */
@@ -93,7 +93,7 @@ export function useInitialDetailHydrate(props, hydratePolicies, normalizePolicy)
  * @param {import('vue').ComputedRef} opt.activePolicy
  * @param {function} opt.markCurrentPolicySaved
  * @param {function} opt.validateForm
- * @param {'pm'|'vm'|'container'} opt.strategyKind 与 collectionStrategyApi 一致
+ * @param {'pm'|'vm'|'container'} opt.strategyKind 与 src/api/probeGroup.js 一致
  * @param {string} opt.strategyTypeName 成功提示用，如「物理机」「虚拟机」「容器」
  * @returns {{ startLoading: import('vue').Ref<boolean>, onSave: Function, onStartCollection: Function }}
  */

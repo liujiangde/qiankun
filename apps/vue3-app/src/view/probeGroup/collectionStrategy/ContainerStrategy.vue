@@ -30,7 +30,7 @@ import {
   fetchTfRouteClusterOptionsApi,
   fetchTfRouteNamespaceOptionsApi,
   fetchTfRouteWorkloadOptionsApi
-} from './collectionStrategyApi.js'
+} from '@/api/probeGroup'
 import { useTfRouteRulePage } from './useTfRouteRulePage.js'
 import './collectionStrategyFormShared.css'
 

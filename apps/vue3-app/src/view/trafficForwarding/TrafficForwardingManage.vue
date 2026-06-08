@@ -3,6 +3,7 @@ import { h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, View, Delete, VideoPlay, VideoPause, WarningFilled } from '@element-plus/icons-vue'
+import { trafficForwardingNodeMockRecords } from '@/mocks/trafficForwarding'
 
 const router = useRouter()
 
@@ -56,18 +57,9 @@ const query = reactive({
   opStatus: ''
 })
 
-// 模拟后端全量数据；列表仅通过接口返回当前页
-const allNodes = ref([
-  { id: 1, host: 'collector-node-01', ip: '192.168.1.100', group: '生产环境组', category: '物理机', connectStatus: '已连接', collectStatus: '正在采集', opStatus: '无' },
-  { id: 2, host: 'collector-node-02', ip: '192.168.1.101', group: '测试环境组', category: '容器', connectStatus: '未连接', collectStatus: '未采集', opStatus: '待执行' },
-  { id: 3, host: 'collector-node-03', ip: '192.168.1.102', group: '生产环境组', category: '虚拟机', connectStatus: '已连接', collectStatus: '正在采集', opStatus: '执行中' },
-  { id: 4, host: 'collector-node-04', ip: '192.168.1.103', group: '开发环境组', category: '物理机', connectStatus: '已连接', collectStatus: '正在采集', opStatus: '卸载失败' },
-  { id: 5, host: 'collector-node-05', ip: '192.168.1.104', group: '测试环境组', category: '物理机', connectStatus: '未连接', collectStatus: '错误', opStatus: '启动失败' },
-  { id: 6, host: 'collector-node-06', ip: '192.168.1.105', group: '开发环境组', category: '容器', connectStatus: '已连接', collectStatus: '未采集', opStatus: '停止失败' },
-  { id: 7, host: 'collector-node-07', ip: '192.168.1.106', group: '生产环境组', category: '容器', connectStatus: '已连接', collectStatus: '正在采集', opStatus: '执行成功' },
-  { id: 8, host: 'collector-node-08', ip: '192.168.1.107', group: '测试环境组', category: '虚拟机', connectStatus: '未连接', collectStatus: '错误', opStatus: '超时' },
-  { id: 9, host: 'collector-node-09', ip: '192.168.1.108', group: '开发环境组', category: '物理机', connectStatus: '已连接', collectStatus: '未采集', opStatus: '参数错误' }
-])
+const allNodes = ref(
+  trafficForwardingNodeMockRecords.map((record) => ({ ...record }))
+)
 
 /** 流量转发列表：后端筛选 + 后端分页。接真实接口时替换为 request/axios，保持入参/出参结构即可 */
 function queryTrafficForwardingListApi(params) {

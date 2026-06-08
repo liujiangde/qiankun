@@ -49,7 +49,7 @@ Vue 子应用请求层会读取 `VITE_API_BASE_URL` 作为接口前缀；为空�
 6. `apps/vue3-app/vite.config.js`：理解开发服务跨域、Element Plus 按需导入和构建分包策略。
 7. `apps/vue3-app/src/utils/request.js`：理解公共请求层如何统一 baseURL、token、`401` 处理、错误处理和重复请求取消。
 8. `apps/vue3-app/src/config/mock.js`：理解本地 mock 开关如何集中管理。
-9. `apps/vue3-app/src/mocks/dial.js`、`apps/vue3-app/src/mocks/trafficForwarding.js`：理解本地 mock 数据如何从页面中隔离。
+9. `apps/vue3-app/src/mocks/dial.js`、`apps/vue3-app/src/mocks/trafficForwarding.js`、`apps/vue3-app/src/mocks/probeGroup.js`：理解本地 mock 数据如何从页面中隔离。
 10. `apps/vue3-app/src/api/dial.js`、`apps/vue3-app/src/api/trafficForwarding.js`、`apps/vue3-app/src/api/probeGroup.js`：理解页面如何通过业务 API 模块访问后端。
 11. `tests/e2e/smoke.spec.js`：理解如何用浏览器冒烟测试防止路由切换回归。
 

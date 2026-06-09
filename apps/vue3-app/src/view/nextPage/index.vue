@@ -16,6 +16,8 @@ import {
 const PAGE_SIZE_OPTIONS = [10, 20, 50]
 const DEFAULT_PAGE_SIZE = 10
 
+// 这里是“流量转发告警规则”列表页。
+// RuleDia 负责编辑复杂规则表单，本页负责筛选、分页、启停、删除和打开弹窗。
 const statusOptions = [
   { label: '全部', value: '' },
   { label: '停用', value: 0 },
@@ -90,6 +92,7 @@ function summarizePhysicalMachineScope(firstGroup, firstMachineText, groupCount)
 }
 
 function normalizeRuleRecord(record) {
+  // 后端返回字段可能缺省或类型不稳定，进入表格前统一转成 UI 可直接消费的形状。
   const conditionMeta = parseAlertConditionMeta(record?.alertCondition)
   return {
     id: record?.id ?? '',
@@ -110,6 +113,8 @@ function normalizeRuleRecord(record) {
 }
 
 function parseAlertConditionMeta(raw) {
+  // alertCondition 历史上既可能是老格式，也可能是新版 ruleGroup JSON。
+  // 解析失败时保留原文展示，避免因为单条脏数据导致整个列表不可用。
   const str = String(raw ?? '').trim()
   if (!str) return { text: '-', raw: null }
   try {
@@ -172,6 +177,7 @@ function normalizeListResponse(raw) {
 }
 
 function buildRequestBody() {
+  // 页面筛选态 -> 后端列表查询 body；空值不传，减少后端额外判断。
   const body = {
     current: page.value,
     size: pageSize.value
@@ -226,6 +232,7 @@ function isConfirmCanceled(err) {
 }
 
 async function runRowActionWithConfirm(row, options) {
+  // 启用、停用、删除只有接口函数和提示文案不同，统一封装可减少三份重复逻辑。
   const { confirmText, confirmButtonText, successText, errorText, request } = options
   try {
     await ElMessageBox.confirm(confirmText, '提示', {

@@ -11,6 +11,8 @@ let router = null
 let authExpiredHandler = null
 
 function setupAuthExpiredHandler() {
+  // 请求层只负责抛出“认证失效”事件，入口层负责决定如何展示 UI 提示。
+  // 这样 API 模块不会直接依赖 Element Plus，也更容易替换登录处理方式。
   if (authExpiredHandler) return
   authExpiredHandler = (event) => {
     ElMessage.error(event?.detail?.message || '登录状态已失效，请重新登录')
@@ -31,6 +33,7 @@ function render(props = {}) {
 
   const container = props.container
   const mountPoint = container ? container.querySelector('#app') : document.getElementById('app')
+  // 每次 mount 都创建新的 router，确保内部路由状态不会从上一次子应用实例继承。
   router = createAppRouter({
     base: props.routerBase || '/',
     // qiankun 模式使用 hash 路由，避免 Vue 内部路由污染主应用 pathname。
@@ -50,6 +53,7 @@ function teardownVueApp() {
     app.unmount()
     app = null
   }
+  // router 没有暴露手动 destroy API；Vue app.unmount() 会触发 router install 时注册的清理逻辑。
   router = null
   teardownAuthExpiredHandler()
 }

@@ -12,6 +12,7 @@ export const microApps = [
     activeRule: '/react-dashboard',
     props: {
       // routerBase 传给子应用，让子应用知道自己挂载在主应用的哪个路径下。
+      // React 子应用当前不维护复杂路由，但保留该字段方便后续扩展。
       routerBase: '/react-dashboard',
       from: 'qiankun-host'
     }
@@ -23,6 +24,7 @@ export const microApps = [
     activeRule: '/vue3-app',
     props: {
       // Vue 子应用在 qiankun 模式下会基于这个 base 生成 hash 路由。
+      // 例如主应用路径 /vue3-app，对应 Vue 内部路径 /#/dial/pool。
       routerBase: '/vue3-app',
       from: 'qiankun-host'
     }

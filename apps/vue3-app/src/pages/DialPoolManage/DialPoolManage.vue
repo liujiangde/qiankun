@@ -34,6 +34,8 @@ const query = reactive({
   status: ''
 })
 
+// 列表页的核心状态：分页、loading、总数和当前页数据。
+// 页面只维护 UI 状态，真正的数据来源统一走 src/api/dial.js。
 const page = ref(1)
 const pageSize = ref(5)
 
@@ -56,6 +58,7 @@ function onSortChange({ prop, order }) {
 }
 
 async function fetchList() {
+  // reqSeq 是“最后一次请求赢”的保护：用户快速筛选/翻页时，旧请求返回也不会覆盖新结果。
   const curSeq = ++reqSeq.value
   loading.value = true
   try {
@@ -114,6 +117,7 @@ function openCreate() {
 }
 
 function openEdit(row) {
+  // 编辑弹窗使用当前行快照回填，避免用户正在编辑时表格刷新影响表单内容。
   dialogMode.value = 'edit'
   form.id = row.id
   form.name = row.name
@@ -168,6 +172,7 @@ async function onDelete(row) {
 }
 
 function onManageSources(row) {
+  // 拨测源管理页依赖拨测池上下文；通过 query 传过去，避免再发一次池详情请求。
   router.push({
     name: 'dial-source',
     query: {
@@ -190,6 +195,7 @@ watch([page, pageSize], fetchList, { immediate: true })
 watch(
   () => [query.region, query.name, query.status],
   () => {
+    // 任一筛选条件变化都回到第一页，这是列表筛选的常见交互约定。
     page.value = 1
     fetchList()
   }

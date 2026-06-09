@@ -4,6 +4,7 @@ export const AUTH_EXPIRED_EVENT = 'vue3-app-auth-expired'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 const AUTH_TOKEN_KEY = import.meta.env.VITE_AUTH_TOKEN_KEY || 'access_token'
+// dedupeKey -> AbortController：用于取消上一笔同类查询，避免旧响应覆盖新界面状态。
 const pendingControllers = new Map()
 
 const service = axios.create({
@@ -55,6 +56,7 @@ function attachDedupeController(config) {
   }
 
   config.signal = controller.signal
+  // Axios config 会贯穿 request/response interceptor，这里挂内部字段方便响应后清理 Map。
   config.__dedupeKey = dedupeKey
   pendingControllers.set(dedupeKey, controller)
   return config
@@ -100,6 +102,7 @@ service.interceptors.response.use(
     const data = response.data
 
     // 后端常见约定：success=false 代表业务失败，HTTP 状态仍可能是 200。
+    // 在这里统一 reject，页面 catch 到的就都是 Error，而不是各种后端响应形状。
     if (data && typeof data === 'object' && data.success === false) {
       return Promise.reject(new Error(data.msg || data.message || '请求失败，请稍后重试'))
     }
@@ -127,6 +130,7 @@ service.interceptors.response.use(
 // 页面和业务 API 只使用这个 request 对象，避免到处直接依赖 axios 实例。
 const request = {
   cancel(dedupeKey) {
+    // 页面离开或手动刷新时可主动取消某类请求；目前主要由 dedupeKey 自动使用。
     cancelPendingRequest(dedupeKey)
   },
   get(url, config = {}) {

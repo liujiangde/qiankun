@@ -23,18 +23,21 @@ function dispatchMicroAppStatus(name, status, message) {
 registerMicroApps(microApps, {
   beforeLoad: [
     (app) => {
+      // beforeLoad 发生在 qiankun 开始拉取子应用入口前，适合把 UI 切到 loading。
       dispatchMicroAppStatus(app.name, 'loading')
       return Promise.resolve()
     }
   ],
   afterMount: [
     (app) => {
+      // afterMount 表示子应用已经把自己的根组件渲染进主应用容器。
       dispatchMicroAppStatus(app.name, 'mounted')
       return Promise.resolve()
     }
   ],
   afterUnmount: [
     (app) => {
+      // afterUnmount 表示子应用已经离开当前路由，主应用可恢复 idle 状态。
       dispatchMicroAppStatus(app.name, 'idle')
       return Promise.resolve()
     }

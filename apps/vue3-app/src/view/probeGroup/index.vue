@@ -46,6 +46,7 @@ const query = reactive({
   status: ''
 })
 
+// 探针分组列表是后续采集策略的入口，所以表格行里会带上 groupId/groupName 跳转到策略页。
 const page = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
@@ -198,6 +199,7 @@ function openCreate() {
 }
 
 function openEdit(row) {
+  // 分组规则 rule 是 JSON 字符串，弹窗内部负责解析并回显规则组。
   dialogMode.value = 'edit'
   editingId.value = row.id
   dialogInitialData.value = buildDialogInitialFromRow(row)
@@ -210,6 +212,8 @@ function openEdit(row) {
  * 弹窗内「确认创建 / 确认修改」：先走接口，成功后再由弹窗关闭；失败由弹窗展示错误并保持打开。
  */
 async function handleProbeGroupSubmitRequest(payload) {
+  // payload 来自两步弹窗：基础信息 + 规则匹配后的采集器列表。
+  // collectorCount 用于列表展示，rule 用于后续重新编辑或保存到后端。
   const collectorCount = Array.isArray(payload?.collectors) ? payload.collectors.length : 0
 
   if (dialogMode.value === 'create') {
@@ -357,6 +361,7 @@ async function onExport() {
 }
 
 function onProbeLink(row) {
+  // “查看采集策略”并不直接传整个策略对象，只传分组上下文；策略页自行按 groupId 拉取策略。
   router.push({
     name: 'probe-group-collection-strategy',
     query: {

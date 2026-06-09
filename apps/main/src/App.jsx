@@ -46,7 +46,8 @@ function getActiveRoute(path) {
   return routes.find((route) => route.path !== '/' && path.startsWith(route.path)) || routes[0]
 }
 
-// 这个组件只负责主应用外壳：侧边栏、状态区、子应用容器，不渲染子应用业务页面。
+// 主应用只维护“哪个微应用应该显示”和“微应用当前生命周期状态”。
+// 业务页面由 qiankun 注入到 #micro-app-container，避免主应用直接耦合子应用实现。
 export default function App() {
   const [path, setPath] = useState(getCurrentPath)
   const [microStatuses, setMicroStatuses] = useState(initialMicroStatuses)
@@ -83,6 +84,8 @@ export default function App() {
   }, [])
 
   const activeRoute = useMemo(() => getActiveRoute(path), [path])
+  // activeRoute.appName 是主应用和 qiankun 注册表之间的关联点。
+  // 没有 appName 的路由展示主应用首页，有 appName 的路由展示微应用容器。
   const isMicroRoute = Boolean(activeRoute.appName)
   const microStatus = activeRoute.appName ? microStatuses[activeRoute.appName] : 'idle'
   const microError = activeRoute.appName ? microErrors[activeRoute.appName] : ''

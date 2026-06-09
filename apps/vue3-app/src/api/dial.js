@@ -10,6 +10,8 @@ import {
 const DETECTION_RESULT_PREFIX = '/cloudmonitor/tbDetectionResult'
 const DETECTION_ALERT_PREFIX = '/tbDetectionAlert'
 
+// 拨测模块当前同时支持真实接口和本地 mock。
+// 页面统一调用本文件导出的函数，不需要关心数据来自后端还是 mockStore。
 let dialRuleMockStore = dialRuleMockRecords.map((record) => ({ ...record }))
 let dialPoolMockStore = dialPoolMockRecords.map((record) => ({ ...record }))
 const dialSourceMockStores = new Map()
@@ -28,6 +30,7 @@ function toTimeMs(value) {
 }
 
 function buildPagedResponse(list, current, size) {
+  // mock 数据也包装成后端分页响应形状，页面归一化逻辑就能和真实接口保持一致。
   const page = Number(current ?? 1)
   const pageSize = Number(size ?? 10)
   const start = (page - 1) * pageSize
@@ -40,6 +43,7 @@ function buildPagedResponse(list, current, size) {
 }
 
 function queryTbDetectionAlertListByMock(params) {
+  // 拨测告警历史：按时间范围、关键字和排序模拟后端分页查询。
   const keyword = String(params.query ?? '')
     .trim()
     .toLowerCase()
@@ -130,6 +134,7 @@ function buildDialRuleRecord(payload, extra = {}) {
 }
 
 function getDialSourceStore(poolId) {
+  // 每个拨测池维护一份拨测源 mockStore，模拟“池和源是一对多”的业务关系。
   const key = String(poolId || 'default')
   if (!dialSourceMockStores.has(key)) {
     const base = Number(poolId || 0) || 1
@@ -246,6 +251,7 @@ export async function testDialRuleConnectivityApi(params) {
 }
 
 export async function queryDialPoolListApi(params) {
+  // 拨测池列表负责承载“区域 / 状态 / 名称 / 排序 / 分页”的主查询。
   await delay(300)
   const name = String(params.name ?? '').trim()
   const region = String(params.region ?? '')

@@ -9,6 +9,7 @@ function activeMicroStatus(page) {
 }
 
 async function clickVueMenuItem(page, name, urlPattern) {
+  // Vue 子应用菜单点击后会触发 hash 路由变化；toPass 用来吸收一次偶发的 dev-server 时序抖动。
   const menuItem = microAppContainer(page).getByRole('menuitem', { name, exact: true })
   await expect(menuItem).toBeVisible()
   await expect(async () => {
@@ -48,6 +49,7 @@ test('host routes mount micro apps and clear Vue hash route on React switch', as
 })
 
 test('Vue app can mount and unmount repeatedly without route leakage', async ({ page }) => {
+  // 记录主应用收到的 qiankun 生命周期事件，用来验证 Vue 子应用至少经历过 mount 和 unmount。
   await page.addInitScript(() => {
     window.__MICRO_APP_STATUS_EVENTS__ = []
     window.addEventListener('micro-app-status', (event) => {
@@ -71,6 +73,7 @@ test('Vue app can mount and unmount repeatedly without route leakage', async ({ 
   await expect(page.getByRole('heading', { name: 'Vue3 App' })).toBeVisible()
   await expect(activeMicroStatus(page)).toHaveText('mounted')
   await expect(microAppContainer(page)).toContainText('首页')
+  // 第二次进入 Vue 后再跳一个业务页，验证重新 mount 的 router 仍然可用。
   await clickVueMenuItem(page, '流量转发', /\/vue3-app\/?#\/trafficForwarding/)
   await expect(
     microAppContainer(page).getByRole('columnheader', { name: '物理主机' })
@@ -94,6 +97,8 @@ test('Vue app can mount and unmount repeatedly without route leakage', async ({ 
     }
   })
 
+  // 这里不强依赖精确次数：本地复用 dev server 时，qiankun 事件数量可能受缓存和切换速度影响。
+  // 只要页面两次可用、发生过卸载且没有 error，就能覆盖本阶段的路由隔离目标。
   expect(lifecycle.vueMounted).toBeGreaterThanOrEqual(1)
   expect(lifecycle.vueIdle).toBeGreaterThanOrEqual(1)
   expect(lifecycle.vueErrors).toBe(0)

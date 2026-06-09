@@ -5,6 +5,8 @@ import { probeCollectorMockRecords, probeGroupMockRecords } from '@/mocks/probeG
 const TF_ROUTE_RULE_PREFIX = '/apmServer-sl/tfRouteRule'
 const USE_MOCK_TF_ROUTE_RULE = mockSwitches.tfRouteRule
 
+// 探针分组是采集策略的上层容器：
+// 分组负责定义“哪些采集器属于一组”，采集策略负责定义“这些采集器如何转发流量”。
 let mockTfRouteRuleIdSeed = 100000
 let probeGroupMockStore = probeGroupMockRecords.map((record) => ({ ...record }))
 
@@ -13,6 +15,7 @@ function delay(ms) {
 }
 
 function normalizeIdArray(raw, fieldName) {
+  // 后端接口需要重复 groupId 参数；这里先把单值/数组统一成数字数组。
   const list = Array.isArray(raw) ? raw : [raw]
   const result = list.map((x) => Number(x)).filter((n) => !Number.isNaN(n))
   if (!result.length) {
@@ -64,6 +67,7 @@ function hitCollectorRule(collector, rule) {
 }
 
 function filterCollectorsLocal(collectors, ruleGroup, type, region, relation) {
+  // 新建/编辑分组第二步会用规则预览匹配采集器，这里模拟“规则组 + and/or 关系”的筛选。
   const targetType = String(type ?? '')
   const targetRegion = String(region ?? '')
   const rel = relation === 'and' ? 'and' : 'or'
@@ -78,6 +82,7 @@ function filterCollectorsLocal(collectors, ruleGroup, type, region, relation) {
 }
 
 export async function queryProbeGroupListApi(params) {
+  // 探针分组主列表：名称支持模糊查，类型/区域/状态按精确值过滤。
   await delay(250)
   const nameKeyword = String(params.name ?? '')
     .trim()
@@ -171,6 +176,7 @@ export async function queryMatchedCollectorsApi(payload) {
 }
 
 export function importProbeGroupUploadApi(formData) {
+  // 导入功能读取本地 JSON 文件，格式兼容数组、{list} 和 {rows} 三种结构。
   const file = formData.get('file')
   if (!file || !file.size) {
     return Promise.reject(new Error('请选择有效文件'))

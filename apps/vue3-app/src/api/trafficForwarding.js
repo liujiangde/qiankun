@@ -13,6 +13,9 @@ import {
 const TRAFFIC_FORWARD_ALERT_PREFIX = '/tfTrafficForwardAlert'
 const TF_ALARM_RULE_PREFIX = '/apmServer-s1/tf-alarm-rule'
 
+// 流量转发模块包含两类业务：
+// 1. 采集器节点管理（启动、停止、卸载、监控）
+// 2. 告警历史与告警规则（列表、启停、删除、导入结果）
 let trafficForwardingNodeMockStore = trafficForwardingNodeMockRecords.map((record) => ({
   ...record
 }))
@@ -74,6 +77,7 @@ function inTimeRange(rowTime, from, to) {
 }
 
 function queryTrafficForwardAlertHistoryByMock(params) {
+  // 告警历史 mock 保持和真实接口一致的筛选语义：状态、两个时间范围、关键字、排序。
   const keyword = String(params.keyword ?? '')
     .trim()
     .toLowerCase()
@@ -104,6 +108,7 @@ function queryTrafficForwardAlertHistoryByMock(params) {
 }
 
 function queryTfAlarmRuleListByMock(payload) {
+  // 告警规则列表使用 POST body 查询；mock 也按 body 字段过滤，方便后续切真实接口。
   const keyword = String(payload.keyword ?? '')
     .trim()
     .toLowerCase()
@@ -256,6 +261,7 @@ export function fetchTfAlarmRuleImportResultApi() {
 }
 
 export async function queryTrafficForwardingListApi(params) {
+  // 采集器列表目前是本地 mock；字段名按页面筛选模型设计，方便替换为真实 query 参数。
   await delay(250)
   const hostKeyword = String(params.physicalHost ?? '')
     .trim()
@@ -288,6 +294,7 @@ export async function queryTrafficForwardingListApi(params) {
 }
 
 function findTrafficForwardingNode(id) {
+  // 行级操作都先定位节点，再修改 opStatus / collectStatus，模拟后端状态流转。
   const numId = Number(id)
   return Number.isInteger(numId)
     ? trafficForwardingNodeMockStore.find((node) => node.id === numId)

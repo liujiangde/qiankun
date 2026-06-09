@@ -4,6 +4,12 @@ import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Plus, Delete } from '@element-plus/icons-vue'
 import BatchAddSourceDialog from './BatchAddSourceDialog.vue'
+import {
+  batchAddDialSourcesApi,
+  batchDeleteDialSourceApi,
+  deleteDialSourceApi,
+  queryDialSourceListApi
+} from '@/api/dial'
 
 const route = useRoute()
 
@@ -20,74 +26,6 @@ const poolInfo = computed(() => ({
 const keyword = ref('')
 
 const batchAddVisible = ref(false)
-const allSourcesMap = ref({})
-
-function getPoolSourceStore(poolId) {
-  const key = String(poolId || 'default')
-  if (!allSourcesMap.value[key]) {
-    allSourcesMap.value[key] = Array.from({ length: 12 }, (_, index) => {
-      const no = index + 1
-      const base = Number(poolId || 0) || 1
-      return {
-        id: base * 1000 + no,
-        name: `物理机${String(no).padStart(3, '0')}`,
-        ip: `192.168.${base}.${no}`,
-        adder: ['张三', '李四', '王五', '赵六', '钱七'][index % 5],
-        addedAt: `2026-02-${String(((index + base) % 28) + 1).padStart(2, '0')}`,
-        status: index % 3 === 0 ? '离线' : '在线'
-      }
-    })
-  }
-  return allSourcesMap.value[key]
-}
-
-function queryDialSourceListApi(params) {
-  // 接真实接口时：替换为根据 poolId 查询拨测源列表接口
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const poolId = String(params.poolId ?? '')
-      const k = String(params.keyword ?? '').trim()
-      const p = Number(params.page ?? 1)
-      const ps = Number(params.pageSize ?? 10)
-      const allSources = getPoolSourceStore(poolId)
-      const filtered = allSources.filter((s) => {
-        if (!k) return true
-        return s.name.includes(k) || s.ip.includes(k) || s.adder.includes(k)
-      })
-      const start = (p - 1) * ps
-      resolve({
-        list: filtered.slice(start, start + ps),
-        total: filtered.length,
-        allOptions: allSources.map((s) => ({ ip: s.ip, name: s.name }))
-      })
-    }, 300)
-  })
-}
-
-function deleteDialSourceApi(params) {
-  // 接真实接口时：替换为单个删除拨测源接口
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const key = String(params.poolId || 'default')
-      const currentSources = getPoolSourceStore(key)
-      allSourcesMap.value[key] = currentSources.filter((s) => s.id !== params.sourceId)
-      resolve(true)
-    }, 300)
-  })
-}
-
-function batchDeleteDialSourceApi(params) {
-  // 接真实接口时：替换为批量删除拨测源接口
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const key = String(params.poolId || 'default')
-      const ids = new Set(params.sourceIds ?? [])
-      const currentSources = getPoolSourceStore(key)
-      allSourcesMap.value[key] = currentSources.filter((s) => !ids.has(s.id))
-      resolve(true)
-    }, 300)
-  })
-}
 
 const page = ref(1)
 const pageSize = ref(5)
@@ -139,34 +77,11 @@ function onBatchAdd() {
   batchAddVisible.value = true
 }
 
-function onBatchAddSubmit(selectedOptions) {
-  // 弹框回传的是完整候选项，避免页面侧再二次查 name/ip 映射
-  const currentSources = getPoolSourceStore(poolInfo.value.id)
-  const existed = new Set(currentSources.map((s) => s.ip))
-
-  const today = new Date()
-  const yyyy = String(today.getFullYear())
-  const mm = String(today.getMonth() + 1).padStart(2, '0')
-  const dd = String(today.getDate()).padStart(2, '0')
-  const addedAt = `${yyyy}-${mm}-${dd}`
-
-  let added = 0
-  for (const option of selectedOptions) {
-    const ip = option.ip
-    if (existed.has(ip)) continue
-    const name = option.name ?? `物理机${String(currentSources.length + 1).padStart(3, '0')}`
-    const id = currentSources.length ? Math.max(...currentSources.map((s) => s.id)) + 1 : 1
-    currentSources.unshift({
-      id,
-      name,
-      ip,
-      adder: '当前用户',
-      addedAt,
-      status: '在线'
-    })
-    existed.add(ip)
-    added += 1
-  }
+async function onBatchAddSubmit(selectedOptions) {
+  const { added } = await batchAddDialSourcesApi({
+    poolId: poolInfo.value.id,
+    sources: selectedOptions
+  })
   ElMessage.success(added ? `已添加 ${added} 条` : '未新增（已存在）')
   reloadFromFirstPage()
 }
@@ -406,4 +321,3 @@ watch(
   }
 }
 </style>
-

@@ -7,18 +7,6 @@ import {
   fetchTfAlarmRulePhysicalMachinesApi,
   fetchTfAlarmRuleScopeGroupsApi
 } from '@/api/trafficForwarding'
-import { mockSwitches } from '@/config/mock'
-import {
-  tfAlarmRuleAlertContentTagsRaw,
-  tfAlarmRulePhysicalMachinesByGroup,
-  tfAlarmRuleScopeGroups
-} from '@/mocks/trafficForwarding'
-
-/** 为 true 时使用本地标签数据，不请求接口；优先读环境变量 */
-const USE_MOCK_ALERT_CONTENT_TAGS = mockSwitches.alertContentTags
-
-/** 为 true 时分组/物理机走本地 mock，优先读环境变量 */
-const USE_MOCK_SCOPE_APIS = mockSwitches.scopeApis
 
 /**
  * 父组件通过 v-model 控制弹窗开关；关闭时父级可用 v-if 卸载本组件以清空内部状态。
@@ -114,14 +102,7 @@ function getPhysicalMachineOptions(groupId) {
 
 /** 加载分组下拉；force=true 时忽略缓存重新请求 */
 async function loadScopeGroups(force = false) {
-  // mock：每次打开弹窗都从本地填充
   try {
-    if (USE_MOCK_SCOPE_APIS) {
-      await delay(160)
-      groupOptions.value = tfAlarmRuleScopeGroups.map((o) => ({ ...o }))
-      scopeGroupsLoaded = true
-      return
-    }
     if (force) scopeGroupsLoaded = false
     if (scopeGroupsLoaded && groupOptions.value.length) return
     if (scopeGroupsPromise) return await scopeGroupsPromise
@@ -154,14 +135,6 @@ async function loadPhysicalMachinesForGroup(groupId, force = false) {
 
   pmLoadingByGroup[groupId] = true
   try {
-    if (USE_MOCK_SCOPE_APIS) {
-      await delay(160)
-      pmOptionsByGroup[groupId] = [
-        ...(tfAlarmRulePhysicalMachinesByGroup[groupId] || [])
-      ]
-      loadedPhysicalGroupIds[groupId] = true
-      return
-    }
     const res = await fetchTfAlarmRulePhysicalMachinesApi({ groupId })
     const list = extractListFromApi(res)
     pmOptionsByGroup[groupId] = list.map(normalizeSelectOption).filter(Boolean)
@@ -212,10 +185,6 @@ function normalizeContentTag(raw) {
   return null
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 /**
  * 滚到告警配置弹窗内容区底部。
  * 单独 nextTick 往往不够：异步数据/flex 布局下一帧 scrollHeight 才稳定，故再叠两帧 rAF。
@@ -238,13 +207,6 @@ function scrollAlarmConfigToBottom() {
 async function loadContentTags() {
   contentTagsLoading.value = true
   try {
-    if (USE_MOCK_ALERT_CONTENT_TAGS) {
-      await delay(220)
-      contentTags.value = tfAlarmRuleAlertContentTagsRaw
-        .map(normalizeContentTag)
-        .filter(Boolean)
-      return
-    }
     const res = await fetchTfAlarmRuleAlertContentTagsApi()
     const list = extractTagListFromResponse(res)
     contentTags.value = list.map(normalizeContentTag).filter(Boolean)

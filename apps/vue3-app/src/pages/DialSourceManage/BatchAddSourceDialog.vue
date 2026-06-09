@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, watch, ref, shallowRef } from 'vue'
 import { Search } from '@element-plus/icons-vue'
+import { queryDialSourceOptionsApi } from '@/api/dial'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -27,30 +28,12 @@ const rules = {
   ips: [{ type: 'array', required: true, message: '请选择物理机IP', trigger: 'change' }]
 }
 
-function querySourceOptionsApi(params) {
-  // 接真实接口时：替换为获取下拉候选列表接口
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const base = Number(params.poolId || 0) || 1
-      resolve(
-        Array.from({ length: 500 }, (_, index) => {
-          const no = index + 1
-          return {
-            ip: `10.10.${base}.${no}`,
-            name: `候选物理机${String(no).padStart(3, '0')}`
-          }
-        })
-      )
-    }, 300)
-  })
-}
-
 function close() {
   emit('update:modelValue', false)
 }
 
 function toOption(item) {
-  return { value: item, label: item }
+  return { value: item.ip, label: `${item.ip} / ${item.name}` }
 }
 
 function resetVisibleOptions() {
@@ -68,18 +51,18 @@ async function fetchOptions() {
   loading.value = true
   try {
     // 弹框打开时按当前拨测池拉取候选拨测源
-    const list = await querySourceOptionsApi({ poolId: props.poolId })
+    const list = await queryDialSourceOptionsApi({ poolId: props.poolId })
     const safeList = Array.isArray(list)
       ? list
-          .map((item) => (typeof item === 'string' ? item : item?.ip))
-          .filter((item) => typeof item === 'string' && item)
+          .map((item) => (typeof item === 'string' ? { ip: item, name: item } : item))
+          .filter((item) => typeof item?.ip === 'string' && item.ip)
       : []
     rawOptions.value = safeList
 
     const nextMap = new Map()
     for (let i = 0; i < safeList.length; i++) {
       const item = safeList[i]
-      nextMap.set(item, item)
+      nextMap.set(item.ip, item)
     }
 
     matchedRawOptions.value = safeList
@@ -100,7 +83,7 @@ function applySearch(keyword) {
   const matched = []
   for (let i = 0; i < rawOptions.value.length; i++) {
     const item = rawOptions.value[i]
-    if (String(item).toLowerCase().includes(query)) {
+    if (`${item.ip} ${item.name}`.toLowerCase().includes(query)) {
       matched.push(item)
     }
   }
@@ -190,4 +173,3 @@ async function onConfirm() {
 }
 
 </style>
-

@@ -4,6 +4,12 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, EditPen, Delete, User } from '@element-plus/icons-vue'
 import CreateDialPoolDialog from './CreateDialPoolDialog.vue'
+import {
+  createDialPoolApi,
+  deleteDialPoolApi,
+  queryDialPoolListApi,
+  updateDialPoolApi
+} from '@/api/dial'
 
 const router = useRouter()
 
@@ -28,20 +34,6 @@ const query = reactive({
   status: ''
 })
 
-// 模拟“数据库”全量数据；列表查询通过接口返回分页结果
-const allPools = ref([
-  { id: 1, name: '拨测池A1', region: '华东', sourceCount: 1, creator: '张三', updatedAt: '2026-03-05', status: '异常' },
-  { id: 2, name: '拨测池B2', region: '华北', sourceCount: 7, creator: '李四', updatedAt: '2026-03-03', status: '异常' },
-  { id: 3, name: '拨测池C3', region: '华南', sourceCount: 1, creator: '王五', updatedAt: '2026-02-14', status: '正常' },
-  { id: 4, name: '拨测池D4', region: '西南', sourceCount: 7, creator: '赵六', updatedAt: '2026-03-06', status: '正常' },
-  { id: 5, name: '拨测池E5', region: '东北', sourceCount: 10, creator: '钱七', updatedAt: '2026-02-09', status: '正常' },
-  { id: 6, name: '拨测池F6', region: '华东', sourceCount: 7, creator: '周八', updatedAt: '2026-02-18', status: '正常' },
-  { id: 7, name: '拨测池G7', region: '华北', sourceCount: 2, creator: '吴九', updatedAt: '2026-02-09', status: '异常' },
-  { id: 8, name: '拨测池H8', region: '华南', sourceCount: 12, creator: '郑十', updatedAt: '2026-02-28', status: '正常' },
-  { id: 9, name: '拨测池I9', region: '西南', sourceCount: 4, creator: '孙十一', updatedAt: '2026-02-10', status: '正常' },
-  { id: 10, name: '拨测池J10', region: '东北', sourceCount: 6, creator: '周十二', updatedAt: '2026-03-01', status: '异常' }
-])
-
 const page = ref(1)
 const pageSize = ref(5)
 
@@ -52,7 +44,6 @@ const reqSeq = ref(0)
 
 const sortField = ref('')
 const sortOrder = ref('')
-const SORTABLE_FIELDS = new Set(['name', 'region', 'sourceCount', 'updatedAt'])
 function onSortChange({ prop, order }) {
   // el-table order 值：'ascending' | 'descending' | null
   const nextField = order ? String(prop ?? '') : ''
@@ -62,42 +53,6 @@ function onSortChange({ prop, order }) {
   sortOrder.value = nextOrder
   if (page.value !== 1) page.value = 1
   else fetchList()
-}
-
-function queryDialPoolListApi(params) {
-  // 模拟“后端分页查询拨测池列表”接口：只返回当前页 list + total
-  // 接真实接口时：把这里替换成 request/axios，并保留入参/出参结构即可
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const name = String(params.name ?? '').trim()
-      const region = String(params.region ?? '')
-      const status = String(params.status ?? '')
-      const p = Number(params.page ?? 1)
-      const ps = Number(params.pageSize ?? 10)
-      const field = String(params.sortField ?? '')
-      const order = String(params.sortOrder ?? '')
-
-      const filtered = allPools.value.filter((row) => {
-        const okRegion = !region || row.region === region
-        const okStatus = !status || row.status === status
-        const okName = !name || row.name.includes(name)
-        return okRegion && okStatus && okName
-      })
-
-      if (field && order && SORTABLE_FIELDS.has(field)) {
-        const dir = order === 'desc' ? -1 : 1
-        filtered.sort((a, b) => {
-          const av = a[field]
-          const bv = b[field]
-          if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir
-          return String(av ?? '').localeCompare(String(bv ?? ''), 'zh-Hans-CN') * dir
-        })
-      }
-
-      const start = (p - 1) * ps
-      resolve({ list: filtered.slice(start, start + ps), total: filtered.length })
-    }, 300)
-  })
 }
 
 async function fetchList() {
@@ -130,14 +85,15 @@ async function fetchList() {
 }
 
 function onSearch() {
-  page.value = 1
+  if (page.value !== 1) page.value = 1
+  else fetchList()
 }
 
 function onReset() {
   query.region = ''
   query.name = ''
   query.status = ''
-  page.value = 1
+  onSearch()
 }
 
 const createVisible = ref(false)
@@ -168,67 +124,29 @@ function openEdit(row) {
   dialogVisible.value = true
 }
 
-function submit() {
+async function submit() {
   const name = form.name.trim()
   if (!name) return ElMessage.warning('请输入拨测池名称')
   if (!form.region) return ElMessage.warning('请选择所属区域')
   if (!form.creator.trim()) return ElMessage.warning('请输入创建人员')
 
-  const today = new Date()
-  const yyyy = String(today.getFullYear())
-  const mm = String(today.getMonth() + 1).padStart(2, '0')
-  const dd = String(today.getDate()).padStart(2, '0')
-  const updatedAt = `${yyyy}-${mm}-${dd}`
-
-  if (dialogMode.value === 'create') {
-    const id = pools.value.length ? Math.max(...pools.value.map((p) => p.id)) + 1 : 1
-    pools.value.unshift({
-      id,
+  if (dialogMode.value === 'edit') {
+    await updateDialPoolApi(form.id, {
       name,
       region: form.region,
       sourceCount: Number(form.sourceCount) || 0,
       creator: form.creator.trim(),
-      updatedAt,
       status: form.status
     })
-    ElMessage.success('创建成功')
-  } else {
-    const idx = pools.value.findIndex((p) => p.id === form.id)
-    if (idx >= 0) {
-      pools.value[idx] = {
-        ...pools.value[idx],
-        name,
-        region: form.region,
-        status: form.status,
-        sourceCount: Number(form.sourceCount) || 0,
-        creator: form.creator.trim(),
-        updatedAt
-      }
-      ElMessage.success('保存成功')
-    }
+    ElMessage.success('保存成功')
   }
 
   dialogVisible.value = false
-  onSearch()
+  fetchList()
 }
 
-function onCreateSubmit(payload) {
-  const today = new Date()
-  const yyyy = String(today.getFullYear())
-  const mm = String(today.getMonth() + 1).padStart(2, '0')
-  const dd = String(today.getDate()).padStart(2, '0')
-  const updatedAt = `${yyyy}-${mm}-${dd}`
-
-  const id = allPools.value.length ? Math.max(...allPools.value.map((p) => p.id)) + 1 : 1
-  allPools.value.unshift({
-    id,
-    name: payload.name,
-    region: payload.region,
-    sourceCount: 0,
-    creator: '当前用户',
-    updatedAt,
-    status: '正常'
-  })
+async function onCreateSubmit(payload) {
+  await createDialPoolApi(payload)
   ElMessage.success('创建成功')
   onSearch()
 }
@@ -240,7 +158,7 @@ async function onDelete(row) {
       confirmButtonText: '删除',
       cancelButtonText: '取消'
     })
-    allPools.value = allPools.value.filter((p) => p.id !== row.id)
+    await deleteDialPoolApi(row.id)
     ElMessage.success('已删除')
     // 删除后让后端分页重新计算（fetchList 内会自动纠正 page 越界）
     fetchList()

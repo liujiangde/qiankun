@@ -3,14 +3,10 @@ import { reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { fetchTrafficForwardAlertHistoryApi } from '@/api/trafficForwarding'
-import { mockSwitches } from '@/config/mock'
-import { trafficForwardingAlertMockRecords } from '@/mocks/trafficForwarding'
 
 /**
- * 流量转发告警历史列表（后端分页）。
- * 联调前请与 Swagger 对齐路径与参数名；为 true 时使用本地 mock。
+ * 流量转发告警历史列表（后端分页或 API 模块内 mock）。
  */
-const USE_MOCK = mockSwitches.trafficForwardingAlert
 const PAGE_SIZE_OPTIONS = [16, 32, 64]
 const DEFAULT_PAGE_SIZE = 16
 
@@ -20,12 +16,6 @@ const DEFAULT_PAGE_SIZE = 16
 const SORT_PROP_TO_ORDER_BY = {
   abnormalTime: 'abnormal_time',
   alarmTime: 'alarm_time'
-}
-
-/** orderBy → 行上用于 mock 排序的字段名 */
-const ORDER_BY_TO_ROW_FIELD = {
-  abnormal_time: 'abnormalTime',
-  alarm_time: 'alarmTime'
 }
 
 const abnormalStatusOptions = [
@@ -59,13 +49,6 @@ const loading = ref(false)
 const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
-
-const mockRecords = trafficForwardingAlertMockRecords
-
-function toTimeMs(v) {
-  const t = new Date(String(v).replace(/-/g, '/')).getTime()
-  return Number.isNaN(t) ? 0 : t
-}
 
 function formatStatusText(code) {
   return statusLabelMap[code] || String(code || '-')
@@ -103,55 +86,17 @@ function normalizeListResponse(raw) {
   }
 }
 
-async function queryListFromBackend() {
-  // 页面不直接 fetch，便于统一复用 request 的 baseURL、token 和错误处理。
+async function queryList() {
+  // 页面不直接 fetch，mock/真实请求由 API 模块统一处理。
   const data = await fetchTrafficForwardAlertHistoryApi(buildListQueryParams())
   return normalizeListResponse(data)
-}
-
-function inTimeRange(rowTime, range) {
-  if (!Array.isArray(range) || range.length !== 2) return true
-  const [from, to] = range
-  if (!from && !to) return true
-  const t = toTimeMs(rowTime)
-  const fromMs = from ? toTimeMs(from) : 0
-  const toMs = to ? toTimeMs(to) : Number.MAX_SAFE_INTEGER
-  return t >= fromMs && t <= toMs
-}
-
-async function queryListByMock() {
-  const kw = String(query.keyword ?? '').trim().toLowerCase()
-  let list = mockRecords.filter((row) => {
-    if (query.abnormalStatus && row.abnormalStatus !== query.abnormalStatus) return false
-    if (!inTimeRange(row.abnormalTime, query.abnormalTimeRange)) return false
-    if (!inTimeRange(row.alarmTime, query.alarmTimeRange)) return false
-    if (!kw) return true
-    const hay = [row.alarmContent, row.ruleName, row.hostIp, row.hostName]
-      .map((x) => String(x ?? '').toLowerCase())
-      .join('\u0000')
-    return hay.includes(kw)
-  })
-
-  if (query.orderBy && query.order) {
-    const key = ORDER_BY_TO_ROW_FIELD[query.orderBy]
-    if (key) {
-      const factor = query.order === 'asc' ? 1 : -1
-      list = list.slice().sort((a, b) => (toTimeMs(a[key]) - toTimeMs(b[key])) * factor)
-    }
-  }
-
-  const start = (page.value - 1) * pageSize.value
-  return {
-    list: list.slice(start, start + pageSize.value),
-    total: list.length
-  }
 }
 
 async function fetchList() {
   const curSeq = ++reqSeq.value
   loading.value = true
   try {
-    const res = USE_MOCK ? await queryListByMock() : await queryListFromBackend()
+    const res = await queryList()
     if (curSeq !== reqSeq.value) return
     pageData.value = res.list
     total.value = res.total
@@ -199,7 +144,7 @@ function onReset() {
   reloadFromFirstPage()
 }
 
-/** 表头排序仅下发给后端，列表顺序以接口返回为准（mock 下按相同规则模拟） */
+/** 表头排序仅下发给 API，列表顺序以接口返回为准 */
 function onTableSortChange({ prop, order }) {
   if (!order) {
     query.orderBy = ''

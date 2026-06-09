@@ -3,11 +3,7 @@ import { reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, WarningFilled } from '@element-plus/icons-vue'
 import { fetchTbDetectionAlertListApi } from '@/api/dial'
-import { mockSwitches } from '@/config/mock'
-import { tbDetectionAlertMockRecords } from '@/mocks/dial'
 
-/** 本地联调开关：true 使用 mock，false 走后端接口 */
-const USE_MOCK = mockSwitches.tbDetectionAlert
 const PAGE_SIZE_OPTIONS = [16, 32, 64]
 const DEFAULT_PAGE_SIZE = 16
 
@@ -43,13 +39,6 @@ const loading = ref(false)
 const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
-
-const mockRecords = tbDetectionAlertMockRecords
-
-function toTimeMs(v) {
-  const t = new Date(v).getTime()
-  return Number.isNaN(t) ? 0 : t
-}
 
 function buildListQueryParams() {
   const [from = '', to = ''] = Array.isArray(query.dateRange) ? query.dateRange : []
@@ -101,43 +90,17 @@ function normalizeListResponse(raw) {
   }
 }
 
-async function queryTbAlertListFromBackend() {
-  // 页面负责把筛选态转换成后端参数，实际 HTTP 调用交给 src/api/dial.js。
+async function queryTbAlertList() {
+  // 页面负责把筛选态转换成业务参数，mock/真实请求由 src/api/dial.js 决定。
   const data = await fetchTbDetectionAlertListApi(buildListQueryParams())
   return normalizeListResponse(data)
-}
-
-async function queryTbAlertListByMock() {
-  const [from = '', to = ''] = Array.isArray(query.dateRange) ? query.dateRange : []
-  const keyword = String(query.keyword ?? '').trim().toLowerCase()
-  const fromMs = from ? toTimeMs(`${from}T00:00:00`) : 0
-  const toMs = to ? toTimeMs(`${to}T23:59:59`) : Number.MAX_SAFE_INTEGER
-
-  let list = mockRecords.filter((x) => {
-    const t = toTimeMs(x.createTime)
-    const inRange = t >= fromMs && t <= toMs
-    if (!inRange) return false
-    if (!keyword) return true
-    return [x.content, x.ruleName, x.target].some((f) => String(f ?? '').toLowerCase().includes(keyword))
-  })
-
-  if (query.sortField === 'createTime' && query.sortOrder) {
-    const factor = query.sortOrder === 'asc' ? 1 : -1
-    list = list.slice().sort((a, b) => (toTimeMs(a.createTime) - toTimeMs(b.createTime)) * factor)
-  }
-
-  const start = (page.value - 1) * pageSize.value
-  return {
-    list: list.slice(start, start + pageSize.value).map(mapAlertRecord),
-    total: list.length
-  }
 }
 
 async function fetchList() {
   const curSeq = ++reqSeq.value
   loading.value = true
   try {
-    const res = USE_MOCK ? await queryTbAlertListByMock() : await queryTbAlertListFromBackend()
+    const res = await queryTbAlertList()
     if (curSeq !== reqSeq.value) return
     pageData.value = res.list
     total.value = res.total

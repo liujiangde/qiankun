@@ -3,116 +3,16 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, WarningFilled } from '@element-plus/icons-vue'
 import MonitoringInformation from './monitoringInformation.vue'
+import { queryTrafficForwardingDetailApi } from '@/api/trafficForwarding'
 
 const route = useRoute()
 const router = useRouter()
-
-// 与列表页一致的模拟数据，实际可改为接口按 id 拉取
-const nodesMap = {
-  1: {
-    id: 1,
-    host: 'collector-node-01',
-    ip: '192.168.1.100',
-    group: '生产环境组',
-    category: '虚拟机',
-    connectStatus: '已连接',
-    collectStatus: '正在采集',
-    opStatus: '无',
-    memoryLimit: '4GB',
-    cpuLimit: '2核'
-  },
-  2: {
-    id: 2,
-    host: 'collector-node-02',
-    ip: '192.168.1.101',
-    group: '测试环境组',
-    category: '容器',
-    connectStatus: '未连接',
-    collectStatus: '未采集',
-    opStatus: '无',
-    memoryLimit: '4GB',
-    cpuLimit: '2核'
-  },
-  3: {
-    id: 3,
-    host: 'collector-node-03',
-    ip: '192.168.1.102',
-    group: '生产环境组',
-    category: '虚拟机',
-    connectStatus: '已连接',
-    collectStatus: '正在采集',
-    opStatus: '无',
-    memoryLimit: '4GB',
-    cpuLimit: '2核'
-  },
-  4: {
-    id: 4,
-    host: 'collector-node-04',
-    ip: '192.168.1.103',
-    group: '开发环境组',
-    category: '物理机',
-    connectStatus: '已连接',
-    collectStatus: '正在采集',
-    opStatus: '卸载失败',
-    memoryLimit: '4GB',
-    cpuLimit: '2核'
-  },
-  5: {
-    id: 5,
-    host: 'collector-node-05',
-    ip: '192.168.1.104',
-    group: '测试环境组',
-    category: '物理机',
-    connectStatus: '未连接',
-    collectStatus: '错误',
-    opStatus: '启动失败',
-    memoryLimit: '4GB',
-    cpuLimit: '2核'
-  },
-  6: {
-    id: 6,
-    host: 'collector-node-06',
-    ip: '192.168.1.105',
-    group: '开发环境组',
-    category: '容器',
-    connectStatus: '已连接',
-    collectStatus: '未采集',
-    opStatus: '停止失败',
-    memoryLimit: '4GB',
-    cpuLimit: '2核'
-  }
-}
 
 const id = computed(() => route.params.id)
 
 const detail = ref(null)
 const networkIfaces = ref([])
 const loading = ref(false)
-
-/** 流量转发节点详情接口（mock）：接真实接口时替换此函数 */
-function queryTrafficForwardingDetailApi(params) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const rawId = params?.id
-      const numId = rawId ? Number(rawId) : NaN
-      const node = Number.isInteger(numId) ? nodesMap[numId] : null
-
-      resolve({
-        detail: node ? { ...node } : null,
-        networkIfaces: [
-          `eth0 (${node?.ip ?? '192.168.1.100'})`,
-          'eth1 (10.0.0.11)',
-          'docker0 (172.17.0.1)',
-          'veth0 (172.17.0.2)',
-          'veth1 (172.17.0.3)',
-          'veth2 (172.17.0.4)',
-          'br-1234567890ab (172.18.0.1)',
-          'lo (127.0.0.1)'
-        ]
-      })
-    }, 250)
-  })
-}
 
 async function fetchDetail() {
   loading.value = true

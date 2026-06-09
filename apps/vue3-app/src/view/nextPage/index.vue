@@ -9,16 +9,10 @@ import {
   disableTfAlarmRuleApi,
   editTfAlarmRuleApi,
   enableTfAlarmRuleApi,
+  fetchTfAlarmRuleImportResultApi,
   fetchTfAlarmRuleListApi
 } from '@/api/trafficForwarding'
-import { mockSwitches } from '@/config/mock'
-import {
-  tfAlarmRuleImportResult,
-  tfAlarmRuleMockRecords
-} from '@/mocks/trafficForwarding'
 
-/** 为 true 时列表走本地 mock；优先读环境变量 */
-const USE_MOCK = mockSwitches.tfAlarmRuleList
 const PAGE_SIZE_OPTIONS = [10, 20, 50]
 const DEFAULT_PAGE_SIZE = 10
 
@@ -64,7 +58,7 @@ const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
 
-const importResultData = tfAlarmRuleImportResult
+const importResultData = ref({})
 
 function clearFilterWatchTimer() {
   if (!filterWatchTimer) return
@@ -72,22 +66,11 @@ function clearFilterWatchTimer() {
   filterWatchTimer = null
 }
 
-const mockRecords = tfAlarmRuleMockRecords
-
-function toTimeMs(v) {
-  const t = new Date(v).getTime()
-  return Number.isNaN(t) ? 0 : t
-}
-
 function normalizeStatus(v) {
   if (v === 1 || v === '1' || v === true || v === '启用' || v === 'enabled') return 1
   if (v === 0 || v === '0' || v === false || v === '停用' || v === '禁用' || v === 'disabled') return 0
   const n = Number(v)
   return Number.isNaN(n) ? 0 : (n === 1 ? 1 : 0)
-}
-
-function isEmptyStatus(v) {
-  return v === '' || v === null || v === undefined
 }
 
 function splitAgentIds(agentId) {
@@ -193,35 +176,9 @@ function buildRequestBody() {
   return body
 }
 
-async function queryTfAlarmRuleListFromBackend() {
+async function queryTfAlarmRuleList() {
   const data = await fetchTfAlarmRuleListApi(buildRequestBody())
   return normalizeListResponse(data)
-}
-
-async function queryTfAlarmRuleListByMock() {
-  const keyword = String(query.keyword ?? '').trim().toLowerCase()
-  const status = query.status
-  let list = mockRecords.filter((x) => {
-    const okKeyword = !keyword || [x.ruleName, x.alarmContent, x.updateUser].some((f) => String(f).toLowerCase().includes(keyword))
-    const okStatus = isEmptyStatus(status) ? true : normalizeStatus(x.status) === normalizeStatus(status)
-    return okKeyword && okStatus
-  })
-  if (query.sortField && query.sortMode) {
-    // mock 场景下模拟后端排序字段
-    const localSortFieldMap = {
-      update_time: 'updateTime',
-      create_time: 'createTime',
-      last_alarm_time: 'lastAlarmTime'
-    }
-    const field = localSortFieldMap[query.sortField] || query.sortField
-    const factor = query.sortMode === 'asc' ? 1 : -1
-    list = list.slice().sort((a, b) => (toTimeMs(a[field]) - toTimeMs(b[field])) * factor)
-  }
-  const start = (page.value - 1) * pageSize.value
-  return {
-    list: list.slice(start, start + pageSize.value).map(normalizeRuleRecord),
-    total: list.length
-  }
 }
 
 async function fetchList() {
@@ -229,7 +186,7 @@ async function fetchList() {
   const curSeq = ++reqSeq.value
   loading.value = true
   try {
-    const res = USE_MOCK ? await queryTfAlarmRuleListByMock() : await queryTfAlarmRuleListFromBackend()
+    const res = await queryTfAlarmRuleList()
     if (curSeq !== reqSeq.value) return
     pageData.value = res.list
     total.value = res.total
@@ -334,7 +291,8 @@ function onCreate() {
   dialogVisible.value = true
 }
 
-function onOpenImportResult() {
+async function onOpenImportResult() {
+  importResultData.value = await fetchTfAlarmRuleImportResultApi()
   importResultVisible.value = true
 }
 

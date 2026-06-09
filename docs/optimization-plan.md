@@ -56,11 +56,15 @@
 - 新增 `src/mocks/dial.js` 和 `src/mocks/trafficForwarding.js`，隔离拨测告警、流量转发告警、告警规则、标签和分组下拉 mock 数据。
 - 补充 `src/mocks/probeGroup.js`，并将拨测规则、流量转发节点、探针分组的静态列表数据从页面迁移到 mock 模块。
 - 拨测规则管理页的查询、启停、删除、新增、编辑、告警标签和连通性测试模拟接口迁移到 `src/api/dial.js`。
+- 拨测池、拨测源、拨测可视化下拉接口迁移到 `src/api/dial.js`。
+- 流量转发节点列表、详情、采集启停、卸载和监控折线接口迁移到 `src/api/trafficForwarding.js`。
+- 探针分组列表、增删改、启停、导入导出和匹配采集器预览接口迁移到 `src/api/probeGroup.js`。
+- 拨测告警、流量转发告警、告警规则列表和 RuleDia 下拉的 mock 开关下沉到业务 API 模块，页面不再直接导入 `src/mocks` 或 `src/config/mock`。
 
 仍待处理：
 
 - 更细的 Vue 子应用首屏加载优化。
-- 拨测源、拨测池、流量转发节点、探针分组等剩余模拟接口函数和 TODO 的进一步隔离。
+- 仓库卫生细项。
 - ESLint 和 Prettier。
 
 ## 阶段一：运行稳定性
@@ -144,24 +148,24 @@
 
 ### 任务
 
-- [ ] 所有 HTTP 请求统一走 `apps/vue3-app/src/utils/request.js`。
+- [x] 所有 HTTP 请求统一走 `apps/vue3-app/src/utils/request.js`。
 - [x] 页面组件中避免混用原生 `fetch` 和 `axios`。
 - [x] 请求层增加来自环境变量的 `baseURL`。
 - [x] 请求拦截器增加认证 token 注入。
 - [x] 增加集中化 `401` 处理。
 - [x] 增加统一错误提示策略。
 - [x] 对可能重复触发的查询增加请求取消能力。
-- [ ] 将页面内 API 逻辑拆到业务 API 模块：
+- [x] 将页面内 API 逻辑拆到业务 API 模块：
   - [x] `src/api/dial.js`
   - [x] `src/api/probeGroup.js`
   - [x] `src/api/trafficForwarding.js`
   - [x] 拨测规则管理页模拟 API
-- [ ] 替换模拟接口和 TODO，或将 mock 逻辑隔离到明确的 mock 模块中。
+- [x] 替换模拟接口和 TODO，或将 mock 逻辑隔离到明确的 mock 模块中。
 
 ### 验收标准
 
-- [ ] 业务页面不再包含临时的请求实现。
-- [ ] mock API 逻辑被隔离或删除。
+- [x] 业务页面不再包含临时的请求实现。
+- [x] mock API 逻辑被隔离或删除。
 - [x] 已迁移的 API 模块提供稳定的函数名和统一的响应归一化处理。
 
 ## 阶段五：仓库卫生

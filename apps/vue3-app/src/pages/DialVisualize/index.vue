@@ -3,52 +3,16 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { Plus, FullScreen } from '@element-plus/icons-vue'
 import {
   queryDetectionResultLineApi,
-  queryDetectionTimeSpentLineApi
+  queryDetectionTimeSpentLineApi,
+  queryDialVisualPoolOptionsApi,
+  queryDialVisualRuleOptionsApi,
+  queryDialVisualSourceOptionsApi
 } from '@/api/dial'
 import echarts from '@/utils/echarts'
 
 const ruleOptions = ref([])
 const poolOptions = ref([])
 const sourceOptions = ref([])
-
-// TODO: 接入真实「拨测规则下拉」接口，value 必须为后端的 ruleId（数字）
-function queryRuleOptionsApi() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { label: '规则1', value: 1 },
-        { label: '规则2', value: 2 },
-        { label: '规则3', value: 3 }
-      ])
-    }, 300)
-  })
-}
-
-function queryPoolOptionsApi() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { label: '选择拨测池', value: '' },
-        { label: '拨测池A1', value: '拨测池A1' },
-        { label: '拨测池B2', value: '拨测池B2' }
-      ])
-    }, 300)
-  })
-}
-
-// TODO: 接入真实「拨测源下拉」接口，value 必须为 managementIp
-function querySourceOptionsApi() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { label: '选择拨测源', value: '' },
-        { label: '145.9.3.136', value: '145.9.3.136' },
-        { label: '145.0.20.131', value: '145.0.20.131' },
-        { label: '145.9.3.138', value: '145.9.3.138' }
-      ])
-    }, 300)
-  })
-}
 
 const ruleFilter = ref('')
 const poolFilter = ref('')
@@ -240,9 +204,9 @@ const resizeHandler = () => {
 
 async function loadFilterOptions() {
   const [ruleList, poolList, sourceList] = await Promise.all([
-    queryRuleOptionsApi(),
-    queryPoolOptionsApi(),
-    querySourceOptionsApi()
+    queryDialVisualRuleOptionsApi(),
+    queryDialVisualPoolOptionsApi(),
+    queryDialVisualSourceOptionsApi()
   ])
   ruleOptions.value = Array.isArray(ruleList) ? ruleList : []
   poolOptions.value = Array.isArray(poolList) ? poolList : []

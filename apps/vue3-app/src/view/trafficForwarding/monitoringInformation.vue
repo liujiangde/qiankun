@@ -2,10 +2,11 @@
 /**
  * 采集器详情 - 监控信息
  * 展示 CPU、内存、流量（分发/采集）、丢包 的折线图。
- * 根据父组件/路由传入的 nodeId 调用监控详情接口获取折线数据（当前先用 mock）。
+ * 根据父组件/路由传入的 nodeId 调用监控详情接口获取折线数据。
  */
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import echarts from '@/utils/echarts'
+import { queryTrafficForwardingMonitoringApi } from '@/api/trafficForwarding'
 
 const props = defineProps({
   /** 采集器节点 id，后续接监控查询接口时可作为入参 */
@@ -29,15 +30,6 @@ function buildTimeAxis() {
 }
 
 const timeAxis = ref(buildTimeAxis())
-
-/** 生成平滑波动的演示数据（mock 用） */
-function waveSeries(len, base, amplitude, phase = 0, seed = 0) {
-  return Array.from({ length: len }, (_, i) => {
-    const p = i + phase + (seed % 7)
-    const v = base + amplitude * Math.sin(p / 4) + amplitude * 0.35 * Math.sin(p / 2.2)
-    return Math.max(0, Math.round(v * 10) / 10)
-  })
-}
 
 const cpuData = ref([])
 const memoryData = ref([])
@@ -222,28 +214,10 @@ function onResize() {
   chartLoss?.resize()
 }
 
-/** 拟合监控详情接口：返回折线数据 */
-function queryMonitoringInformationApi(params) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const nodeSeed = Number(params?.nodeId ?? 0) || 0
-      const len = timeAxis.value.length
-      resolve({
-        timeAxis: timeAxis.value,
-        cpuData: waveSeries(len, 32, 12, 1, nodeSeed),
-        memoryData: waveSeries(len, 48, 8, 3, nodeSeed),
-        trafficSendData: waveSeries(len, 95, 35, 0, nodeSeed),
-        trafficCollectData: waveSeries(len, 72, 28, 2, nodeSeed),
-        lossData: waveSeries(len, 22, 14, 4, nodeSeed).map((v) => Math.max(0, Math.round(v)))
-      })
-    }, 300)
-  })
-}
-
 async function fetchMonitoringInformation() {
   const nodeId = props.nodeId
   if (nodeId === '' || nodeId === null || nodeId === undefined) return
-  const res = await queryMonitoringInformationApi({ nodeId })
+  const res = await queryTrafficForwardingMonitoringApi({ nodeId })
   timeAxis.value = Array.isArray(res?.timeAxis) && res.timeAxis.length ? res.timeAxis : buildTimeAxis()
   cpuData.value = Array.isArray(res?.cpuData) ? res.cpuData : []
   memoryData.value = Array.isArray(res?.memoryData) ? res.memoryData : []

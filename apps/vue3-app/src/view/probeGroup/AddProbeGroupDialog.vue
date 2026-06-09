@@ -2,11 +2,12 @@
 /**
  * 新增/编辑探针分组弹窗：步骤 0 基本信息，步骤 1 规则 OR + 匹配主机多选。
  * 两步共用同一 el-form；规则数据为 form.ruleGroup + form.relation，与接口 rule 结构一致。
- * 右侧列表由「预览」或编辑模式下进入第二步时自动请求 fetchMatchedCollectors（未传则走内置 mock）；提交前须已成功预览过一次。
+ * 右侧列表由「预览」或编辑模式下进入第二步时自动请求 fetchMatchedCollectors；提交前须已成功预览过一次。
  */
 import { nextTick, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
+import { queryMatchedCollectorsApi } from '@/api/probeGroup'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -26,7 +27,7 @@ const props = defineProps({
   /**
    * 根据规则集查询匹配主机。入参：{ type, region, rule: { ruleGroup: { field, operator, value }[], relation } }
    * 应返回与列表行一致的对象数组，至少含 id、name、ip、status。
-   * 未传入时在组件内用本地 mock 数据按相同规则过滤，便于联调前演示。
+   * 未传入时走 queryMatchedCollectorsApi，便于后续替换真实接口时保持弹窗稳定。
    */
   fetchMatchedCollectors: { type: Function, default: null },
   /**
@@ -178,19 +179,6 @@ const operatorOptions = [
   { label: '不包含字符', value: 'notContains' }
 ]
 
-/** 未接 fetchMatchedCollectors 时，defaultFetchMatched 用此列表做本地过滤演示 */
-const allCollectors = ref([
-  { id: 1, name: 'web-server-sh-01', ip: '192.168.1.10', status: '在线', type: '物理', region: '上海' },
-  { id: 2, name: 'web-server-sh-02', ip: '192.168.1.11', status: '在线', type: '物理', region: '上海' },
-  { id: 3, name: 'db-server-sh-01', ip: '192.168.2.20', status: '在线', type: '物理', region: '上海' },
-  { id: 4, name: 'app-server-sh-01', ip: '192.168.1.15', status: '离线', type: '容器', region: '上海' },
-  { id: 5, name: 'cache-server-sh-01', ip: '192.168.3.30', status: '在线', type: '物理', region: '上海' },
-  { id: 6, name: 'api-server-sh-01', ip: '192.168.1.12', status: '在线', type: '物理', region: '上海' },
-  { id: 7, name: 'api-server-sh-02', ip: '192.168.1.13', status: '在线', type: '物理', region: '上海' },
-  { id: 101, name: 'web-server-bj-01', ip: '10.0.1.10', status: '在线', type: '物理', region: '北京' },
-  { id: 102, name: 'web-server-bj-02', ip: '10.0.1.11', status: '离线', type: '物理', region: '北京' }
-])
-
 /** 用户在右侧列表中点选的主机（提交 collectors） */
 const selectedCollectors = ref([])
 
@@ -208,29 +196,6 @@ function buildPreviewPayload() {
       relation: form.relation
     }
   }
-}
-
-/** 无接口时的本地匹配逻辑，与后端约定 ruleGroup + relation 时需保持一致 */
-function filterCollectorsLocal(collectors, ruleGroup, type, region, relation) {
-  const t = String(type ?? '')
-  const r = String(region ?? '')
-  const rel = relation === 'and' ? 'and' : 'or'
-  return collectors.filter((c) => {
-    const okType = !t || c.type === t
-    const okRegion = !r || c.region === r
-    if (!okType || !okRegion) return false
-    if (!ruleGroup.length) return true
-    const hits = ruleGroup.map((rule) => hitRule(c, rule))
-    return rel === 'and' ? hits.every(Boolean) : hits.some(Boolean)
-  })
-}
-
-/** 模拟网络延迟后返回本地过滤结果 */
-async function defaultFetchMatched(payload) {
-  await new Promise((r) => setTimeout(r, 280))
-  const ruleGroup = payload.rule?.ruleGroup ?? []
-  const relation = payload.rule?.relation ?? 'or'
-  return filterCollectorsLocal(allCollectors.value, ruleGroup, payload.type, payload.region, relation)
 }
 
 // 打开弹窗或 mode / initialData 变化时：重置步骤并回填（编辑时与表格行快照一致）
@@ -262,13 +227,14 @@ watch(
       if (Array.isArray(parsed.matchedFromStore) && parsed.matchedFromStore.length) {
         list = parsed.matchedFromStore.map(normalizeCollectorForList)
       } else {
-        list = filterCollectorsLocal(
-          allCollectors.value,
-          parsed.plainRules,
-          form.type,
-          form.region,
-          parsed.relation
-        ).map(normalizeCollectorForList)
+        list = await queryMatchedCollectorsApi({
+          type: form.type,
+          region: form.region,
+          rule: {
+            ruleGroup: parsed.plainRules,
+            relation: parsed.relation
+          }
+        })
       }
       matchedCollectors.value = list
       hasPreviewed.value = true
@@ -323,17 +289,6 @@ function removeRule(ruleId) {
   if (idx >= 0) form.ruleGroup.splice(idx, 1)
 }
 
-/** 单条规则是否命中；value 为空视为该条恒成立 */
-function hitRule(collector, rule) {
-  const text = String(rule.field === 'ip' ? collector.ip : collector.name).toLowerCase()
-  const value = String(rule.value ?? '').trim().toLowerCase()
-  if (!value) return true
-  if (rule.operator === 'equals') return text === value
-  if (rule.operator === 'notEquals') return text !== value
-  if (rule.operator === 'notContains') return !text.includes(value)
-  return text.includes(value)
-}
-
 function isSelected(collector) {
   return selectedCollectors.value.some((c) => c.id === collector.id)
 }
@@ -354,7 +309,9 @@ async function runPreview() {
     return
   }
   const payload = buildPreviewPayload()
-  const fetcher = typeof props.fetchMatchedCollectors === 'function' ? props.fetchMatchedCollectors : defaultFetchMatched
+  const fetcher = typeof props.fetchMatchedCollectors === 'function'
+    ? props.fetchMatchedCollectors
+    : queryMatchedCollectorsApi
   previewLoading.value = true
   try {
     const list = await fetcher(payload)

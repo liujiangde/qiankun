@@ -1,6 +1,5 @@
 <script setup>
 import { reactive, watch, ref } from 'vue'
-import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -10,7 +9,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'submit'])
 
 const formRef = ref(null)
-const submitting = ref(false)
 const form = reactive({
   name: '',
   region: ''
@@ -38,31 +36,11 @@ watch(
   }
 )
 
-function createDialPoolApi(payload) {
-  // 这里用 setTimeout 模拟创建接口；后续接真实接口时替换为 request/axios 调用即可
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      Math.random() < 0.1 ? reject(new Error('创建失败，请稍后重试')) : resolve({ id: Date.now(), ...payload })
-    }, 600)
-  })
-}
-
 async function onConfirm() {
-  const ok = await formRef?.validate?.().catch(() => false)
+  const ok = await formRef.value?.validate?.().catch(() => false)
   if (!ok) return
-  if (submitting.value) return
-  submitting.value = true
-  const payload = { name: form.name.trim(), region: form.region }
-  try {
-    await createDialPoolApi(payload)
-    ElMessage.success('创建成功')
-    emit('submit', payload)
-    close()
-  } catch (e) {
-    ElMessage.error(e?.message ?? '创建失败')
-  } finally {
-    submitting.value = false
-  }
+  emit('submit', { name: form.name.trim(), region: form.region })
+  close()
 }
 </script>
 
@@ -95,8 +73,8 @@ async function onConfirm() {
 
     <template #footer>
       <div class="dlg-footer">
-        <el-button size="large" :disabled="submitting" @click="close">取 消</el-button>
-        <el-button size="large" type="primary" :loading="submitting" @click="onConfirm">确 定</el-button>
+        <el-button size="large" @click="close">取 消</el-button>
+        <el-button size="large" type="primary" @click="onConfirm">确 定</el-button>
       </div>
     </template>
   </el-dialog>

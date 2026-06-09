@@ -3,7 +3,12 @@ import { h, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, View, Delete, VideoPlay, VideoPause, WarningFilled } from '@element-plus/icons-vue'
-import { trafficForwardingNodeMockRecords } from '@/mocks/trafficForwarding'
+import {
+  queryTrafficForwardingListApi,
+  startTrafficForwardingCollectApi,
+  stopTrafficForwardingCollectApi,
+  uninstallTrafficForwardingApi
+} from '@/api/trafficForwarding'
 
 const router = useRouter()
 
@@ -56,44 +61,6 @@ const query = reactive({
   collectStatus: '',
   opStatus: ''
 })
-
-const allNodes = ref(
-  trafficForwardingNodeMockRecords.map((record) => ({ ...record }))
-)
-
-/** 流量转发列表：后端筛选 + 后端分页。接真实接口时替换为 request/axios，保持入参/出参结构即可 */
-function queryTrafficForwardingListApi(params) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const hostK = String(params.physicalHost ?? '').trim().toLowerCase()
-      const ipK = String(params.physicalIP ?? '').trim()
-      const groupK = String(params.group ?? '').trim()
-      const category = String(params.category ?? '')
-      const connectStatus = String(params.connectStatus ?? '')
-      const collectStatus = String(params.collectStatus ?? '')
-      const opStatus = String(params.opStatus ?? '')
-      const p = Number(params.page ?? 1)
-      const ps = Number(params.pageSize ?? 10)
-
-      const filtered = allNodes.value.filter((n) => {
-        const okHost = !hostK || n.host.toLowerCase().includes(hostK)
-        const okIP = !ipK || n.ip.includes(ipK)
-        const okGroup = !groupK || n.group.includes(groupK)
-        const okCategory = !category || n.category === category
-        const okConnect = !connectStatus || n.connectStatus === connectStatus
-        const okCollect = !collectStatus || n.collectStatus === collectStatus
-        const okOp = !opStatus || n.opStatus === opStatus
-        return okHost && okIP && okGroup && okCategory && okConnect && okCollect && okOp
-      })
-
-      const start = (p - 1) * ps
-      resolve({
-        list: filtered.slice(start, start + ps),
-        total: filtered.length
-      })
-    }, 250)
-  })
-}
 
 const page = ref(1)
 const pageSize = ref(10)
@@ -223,33 +190,6 @@ function opStatusClass(opStatus) {
   return map[opStatus] ?? 'none'
 }
 
-function uninstallTrafficForwardingApi(params) {
-  // 接真实接口时：替换为卸载/解绑接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 300)
-  })
-}
-
-function startCollectApi(params) {
-  // 接真实接口时：替换为启动采集接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 300)
-  })
-}
-
-function stopCollectApi(params) {
-  // 接真实接口时：替换为停止采集接口调用
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(true)
-    }, 300)
-  })
-}
-
 function onDetail(row) {
   router.push({ name: 'trafficForwardingDetail', params: { id: row.id } })
 }
@@ -278,8 +218,6 @@ async function onUninstall(row) {
     rowActionLoading[row.id] = true
     await uninstallTrafficForwardingApi({ id: row.id })
     ElMessage.success('卸载指令已下发')
-    const n = allNodes.value.find((x) => x.id === row.id)
-    if (n) n.opStatus = '无'
     fetchList()
   } catch (_) {}
   finally {
@@ -290,13 +228,8 @@ async function onUninstall(row) {
 async function onStart(row) {
   try {
     rowActionLoading[row.id] = true
-    await startCollectApi({ id: row.id })
+    await startTrafficForwardingCollectApi({ id: row.id })
     ElMessage.success(`已下发启动：${row.host}`)
-    const n = allNodes.value.find((x) => x.id === row.id)
-    if (n) {
-      n.collectStatus = '正在采集'
-      n.opStatus = '无'
-    }
     fetchList()
   } catch (_) {}
   finally {
@@ -307,13 +240,8 @@ async function onStart(row) {
 async function onStop(row) {
   try {
     rowActionLoading[row.id] = true
-    await stopCollectApi({ id: row.id })
+    await stopTrafficForwardingCollectApi({ id: row.id })
     ElMessage.success(`已下发停止：${row.host}`)
-    const n = allNodes.value.find((x) => x.id === row.id)
-    if (n) {
-      n.collectStatus = '未采集'
-      n.opStatus = '无'
-    }
     fetchList()
   } catch (_) {}
   finally {

@@ -60,11 +60,13 @@
 - 流量转发节点列表、详情、采集启停、卸载和监控折线接口迁移到 `src/api/trafficForwarding.js`。
 - 探针分组列表、增删改、启停、导入导出和匹配采集器预览接口迁移到 `src/api/probeGroup.js`。
 - 拨测告警、流量转发告警、告警规则列表和 RuleDia 下拉的 mock 开关下沉到业务 API 模块，页面不再直接导入 `src/mocks` 或 `src/config/mock`。
+- 阶段五已清理应用构建产物、Playwright 临时结果、个人 VS Code 设置和默认 Vite/Vue 模板资源。
+- React 主应用与 React 子应用的 Vite 构建工具依赖已移动到 `devDependencies`，并同步 `pnpm-lock.yaml`。
+- 已确认保留 `apps/vue3-app/.vscode/extensions.json` 作为 Vue 项目编辑器推荐配置。
 
 仍待处理：
 
 - 更细的 Vue 子应用首屏加载优化。
-- 仓库卫生细项。
 - ESLint 和 Prettier。
 
 ## 阶段一：运行稳定性
@@ -174,28 +176,32 @@
 
 ### 任务
 
-- [ ] 删除已提交或未跟踪的迁移产物：
+- [x] 删除已提交或可避免的迁移产物：
   - `.DS_Store`
   - `.specstory`
   - `.pnpm-store`
   - `*.zip`
   - 子应用内的 `dist`
-  - 子应用内的 `node_modules`
+  - Playwright `test-results`
+  - 个人编辑器设置
+- [x] 确认子应用内的 `node_modules` 不进入版本库：
+  - 当前本机保留它们作为 pnpm workspace 安装链接，避免破坏本地构建。
+  - 已由 `.gitignore` 持续忽略。
 - [x] 扩展根目录 `.gitignore`：
   - `.pnpm-store/`
   - `*.zip`
   - `apps/**/dist/`
   - `apps/**/node_modules/`
-- [ ] 判断是否保留 `apps/vue3-app/.vscode/extensions.json`。
+- [x] 判断是否保留 `apps/vue3-app/.vscode/extensions.json`：保留，用于推荐 Vue Volar 扩展。
 - [x] 保持根目录 `pnpm-lock.yaml` 作为唯一 workspace 锁文件。
-- [ ] 将构建工具类依赖移动到合适的 `devDependencies`。
-- [ ] 删除不再使用的模板资源，例如默认 Vite/Vue logo。
+- [x] 将构建工具类依赖移动到合适的 `devDependencies`。
+- [x] 删除不再使用的模板资源，例如默认 Vite/Vue logo。
 
 ### 验收标准
 
-- [ ] `git status --short --ignored` 不再显示可避免的应用目录生成产物。
-- [ ] workspace 只保留根目录一个锁文件。
-- [ ] app 目录中只保留源码和必要配置。
+- [x] `git status --short --ignored` 不再显示可避免的应用目录生成产物。
+- [x] workspace 只保留根目录一个锁文件。
+- [x] app 目录中只保留源码和必要配置；本机安装产生的 `node_modules` 继续忽略。
 
 ## 阶段六：工程化、Lint 和测试
 

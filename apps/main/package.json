@@ -9,10 +9,12 @@
     "preview": "vite preview --host 0.0.0.0 --port 7100 --strictPort"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
     "qiankun": "^2.10.16",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
     "vite": "^5.4.11"
   }
 }

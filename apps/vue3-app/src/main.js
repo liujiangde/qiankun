@@ -7,6 +7,7 @@ import { createAppRouter } from './router/index.js'
 import { AUTH_EXPIRED_EVENT } from './utils/request.js'
 
 let app = null
+let router = null
 let authExpiredHandler = null
 
 function setupAuthExpiredHandler() {
@@ -25,9 +26,12 @@ function teardownAuthExpiredHandler() {
 
 // render 同时支持两种运行方式：被 qiankun 挂载，以及作为普通 Vue 应用独立运行。
 function render(props = {}) {
+  // 防御重复 mount：qiankun 正常会先 unmount 再 mount，这里避免异常时残留旧实例。
+  teardownVueApp()
+
   const container = props.container
   const mountPoint = container ? container.querySelector('#app') : document.getElementById('app')
-  const router = createAppRouter({
+  router = createAppRouter({
     base: props.routerBase || '/',
     // qiankun 模式使用 hash 路由，避免 Vue 内部路由污染主应用 pathname。
     useHash: qiankunWindow.__POWERED_BY_QIANKUN__
@@ -40,6 +44,16 @@ function render(props = {}) {
   setupAuthExpiredHandler()
 }
 
+function teardownVueApp() {
+  if (app) {
+    // app.unmount() 会触发组件 onUnmounted/onBeforeUnmount，并让 Vue Router 释放 history 监听。
+    app.unmount()
+    app = null
+  }
+  router = null
+  teardownAuthExpiredHandler()
+}
+
 renderWithQiankun({
   bootstrap() {
     return Promise.resolve()
@@ -50,10 +64,8 @@ renderWithQiankun({
     return Promise.resolve()
   },
   unmount() {
-    // 卸载时释放 Vue app 实例，避免再次进入子应用时复用旧状态。
-    app?.unmount()
-    app = null
-    teardownAuthExpiredHandler()
+    // 卸载时释放入口层和各组件副作用，避免再次进入子应用时复用旧状态。
+    teardownVueApp()
     return Promise.resolve()
   }
 })

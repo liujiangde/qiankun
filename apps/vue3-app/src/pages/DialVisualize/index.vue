@@ -237,9 +237,14 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', resizeHandler)
-  if (refetchTimer) clearTimeout(refetchTimer)
+  if (refetchTimer) {
+    clearTimeout(refetchTimer)
+    refetchTimer = null
+  }
   successChart?.dispose()
   responseChart?.dispose()
+  successChart = null
+  responseChart = null
 })
 </script>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { fetchTrafficForwardAlertHistoryApi } from '@/api/trafficForwarding'
@@ -49,6 +49,12 @@ const loading = ref(false)
 const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
+
+function clearFilterWatchTimer() {
+  if (!filterWatchTimer) return
+  clearTimeout(filterWatchTimer)
+  filterWatchTimer = null
+}
 
 function formatStatusText(code) {
   return statusLabelMap[code] || String(code || '-')
@@ -125,16 +131,25 @@ watch(
     ...(Array.isArray(query.alarmTimeRange) ? query.alarmTimeRange : [])
   ],
   () => {
-    if (filterWatchTimer) clearTimeout(filterWatchTimer)
-    filterWatchTimer = setTimeout(() => reloadFromFirstPage(), 280)
+    clearFilterWatchTimer()
+    filterWatchTimer = setTimeout(() => {
+      filterWatchTimer = null
+      reloadFromFirstPage()
+    }, 280)
   }
 )
 
+onBeforeUnmount(() => {
+  clearFilterWatchTimer()
+})
+
 function onSearch() {
+  clearFilterWatchTimer()
   reloadFromFirstPage()
 }
 
 function onReset() {
+  clearFilterWatchTimer()
   query.keyword = ''
   query.abnormalStatus = ''
   query.abnormalTimeRange = null

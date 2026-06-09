@@ -1,5 +1,5 @@
 <script setup>
-import { h, reactive, ref, watch } from 'vue'
+import { h, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, View, Delete, VideoPlay, VideoPause, WarningFilled } from '@element-plus/icons-vue'
@@ -103,6 +103,13 @@ watch([page, pageSize], fetchList, { immediate: true })
 
 // 筛选条件变化时自动请求（加一点防抖，避免快速输入时频繁打接口）
 let queryWatchTimer = null
+
+function clearQueryWatchTimer() {
+  if (!queryWatchTimer) return
+  clearTimeout(queryWatchTimer)
+  queryWatchTimer = null
+}
+
 watch(
   () => [
     query.physicalHost,
@@ -114,12 +121,17 @@ watch(
     query.opStatus
   ],
   () => {
-    if (queryWatchTimer) clearTimeout(queryWatchTimer)
+    clearQueryWatchTimer()
     queryWatchTimer = setTimeout(() => {
+      queryWatchTimer = null
       reloadFromFirstPage()
     }, 400)
   }
 )
+
+onBeforeUnmount(() => {
+  clearQueryWatchTimer()
+})
 
 const selection = ref([])
 function onSelectionChange(rows) {

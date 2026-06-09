@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, WarningFilled } from '@element-plus/icons-vue'
 import { fetchTbDetectionAlertListApi } from '@/api/dial'
@@ -39,6 +39,12 @@ const loading = ref(false)
 const pageData = ref([])
 const reqSeq = ref(0)
 let filterWatchTimer = null
+
+function clearFilterWatchTimer() {
+  if (!filterWatchTimer) return
+  clearTimeout(filterWatchTimer)
+  filterWatchTimer = null
+}
 
 function buildListQueryParams() {
   const [from = '', to = ''] = Array.isArray(query.dateRange) ? query.dateRange : []
@@ -124,15 +130,21 @@ watch([page, pageSize], fetchList, { immediate: true })
 watch(
   () => [query.keyword, ...(Array.isArray(query.dateRange) ? query.dateRange : [])],
   () => {
-    if (filterWatchTimer) clearTimeout(filterWatchTimer)
+    clearFilterWatchTimer()
     filterWatchTimer = setTimeout(() => {
+      filterWatchTimer = null
       if (!Array.isArray(query.dateRange) || query.dateRange.length !== 2) return
       reloadFromFirstPage()
     }, 250)
   }
 )
 
+onBeforeUnmount(() => {
+  clearFilterWatchTimer()
+})
+
 function onSearch() {
+  clearFilterWatchTimer()
   if (!Array.isArray(query.dateRange) || query.dateRange.length !== 2) {
     ElMessage.warning('请选择完整的告警时间范围')
     return
@@ -141,6 +153,7 @@ function onSearch() {
 }
 
 function onReset() {
+  clearFilterWatchTimer()
   query.keyword = ''
   query.dateRange = getDefaultDateRange()
   query.sortField = ''

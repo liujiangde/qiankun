@@ -67,6 +67,8 @@
 - 已接入 Prettier，并通过 `pnpm format` 统一格式化源码、文档和配置文件。
 - 新增 `pnpm lint`，串联 ESLint 与 Prettier 检查；`pnpm check` 已纳入 lint、build 和 e2e。
 - Lint 接入过程中修复未使用变量、空 `catch`、Vue `ref` 访问、Vite ESM 路径和 VXLAN 公共组件直接修改 prop 的问题。
+- 阶段二补齐 Vue 子应用卸载清理：入口统一释放 Vue app、认证事件和 router 引用，页面级图表、resize 监听和防抖定时器在卸载时清理。
+- 浏览器冒烟测试新增 Vue 反复挂载/卸载覆盖，验证 `Vue -> React -> Vue -> React` 后 URL 和微应用生命周期状态均正常。
 
 仍待处理：
 
@@ -105,14 +107,14 @@
 - [x] 重新评估 Vue 子应用在 qiankun 模式下的路由策略。
 - [x] 考虑在 qiankun 模式下让 Vue 子应用使用 `createWebHashHistory()`。
 - [x] 如仍需独立运行 Vue 子应用，独立模式保留 `createWebHistory()`。
-- [ ] 确保 Vue 子应用卸载时清理应用实例、路由副作用、图表实例、定时器和全局监听。
+- [x] 确保 Vue 子应用卸载时清理应用实例、路由副作用、图表实例、定时器和全局监听。
 - [ ] 保持主应用内部导航事件与浏览器原生 `popstate` 分离。
 - [ ] 在合适时统一主应用路由元信息和微应用注册元信息，避免重复维护。
 - [x] 为子应用不可用场景增加主应用侧的加载态和错误态。
 
 ### 验收标准
 
-- [ ] Vue 子应用可以反复挂载和卸载。
+- [x] Vue 子应用可以反复挂载和卸载。
 - [x] 从 Vue 子应用切换到 React 子应用后，URL 不被 Vue 路由污染。
 - [ ] 子应用服务不可用时，主应用可以展示清晰提示。
 

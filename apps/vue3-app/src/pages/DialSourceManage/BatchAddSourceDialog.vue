@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch, ref, shallowRef } from 'vue'
+import { onBeforeUnmount, reactive, watch, ref, shallowRef } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { queryDialSourceOptionsApi } from '@/api/dial'
 
@@ -94,21 +94,35 @@ function applySearch(keyword) {
 }
 
 function onSearchKeywordChange(keyword) {
-  if (searchTimer) clearTimeout(searchTimer)
+  clearSearchTimer()
   searchTimer = setTimeout(() => {
+    searchTimer = null
     applySearch(keyword)
   }, SEARCH_DEBOUNCE_MS)
+}
+
+function clearSearchTimer() {
+  if (!searchTimer) return
+  clearTimeout(searchTimer)
+  searchTimer = null
 }
 
 watch(
   () => props.modelValue,
   async (v) => {
-    if (!v) return
+    if (!v) {
+      clearSearchTimer()
+      return
+    }
     reset()
     // 每次打开都重新拉取，避免候选列表使用旧数据
     await fetchOptions()
   }
 )
+
+onBeforeUnmount(() => {
+  clearSearchTimer()
+})
 
 async function onConfirm() {
   const ok = await formRef.value?.validate?.().catch(() => false)

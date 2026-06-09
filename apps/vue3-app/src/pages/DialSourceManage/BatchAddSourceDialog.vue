@@ -74,7 +74,9 @@ async function fetchOptions() {
 }
 
 function applySearch(keyword) {
-  const query = String(keyword ?? '').trim().toLowerCase()
+  const query = String(keyword ?? '')
+    .trim()
+    .toLowerCase()
   if (!query) {
     matchedRawOptions.value = rawOptions.value
     resetVisibleOptions()
@@ -112,10 +114,7 @@ async function onConfirm() {
   const ok = await formRef.value?.validate?.().catch(() => false)
   if (!ok) return
   // 回传完整选项，父页面可直接拿到 ip/name 做新增
-  emit(
-    'submit',
-    form.ips.map((ip) => optionMap.value.get(ip)).filter(Boolean)
-  )
+  emit('submit', form.ips.map((ip) => optionMap.value.get(ip)).filter(Boolean))
   close()
 }
 </script>
@@ -171,5 +170,4 @@ async function onConfirm() {
   justify-content: flex-end;
   gap: 12px;
 }
-
 </style>

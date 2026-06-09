@@ -88,7 +88,8 @@ function buildChartOption(title, dataMap, valueLabel) {
         if (!list.length) return ''
         const header = formatTime(list[0].value[0])
         const rows = list.map(
-          (p) => `${p.marker}${p.seriesName}: <b>${p.value[1]}</b>${valueLabel ? ' ' + valueLabel : ''}`
+          (p) =>
+            `${p.marker}${p.seriesName}: <b>${p.value[1]}</b>${valueLabel ? ' ' + valueLabel : ''}`
         )
         return [header, ...rows].join('<br/>')
       }
@@ -121,18 +122,16 @@ function buildChartOption(title, dataMap, valueLabel) {
 
 function updateSuccessChart() {
   if (!successChart) return
-  successChart.setOption(
-    buildChartOption('拨测成功情况折线图', chartSuccessData.value, ''),
-    { notMerge: true }
-  )
+  successChart.setOption(buildChartOption('拨测成功情况折线图', chartSuccessData.value, ''), {
+    notMerge: true
+  })
 }
 
 function updateResponseChart() {
   if (!responseChart) return
-  responseChart.setOption(
-    buildChartOption('拨测耗时折线图', chartResponseData.value, 'ms'),
-    { notMerge: true }
-  )
+  responseChart.setOption(buildChartOption('拨测耗时折线图', chartResponseData.value, 'ms'), {
+    notMerge: true
+  })
 }
 
 function applyChartData(resultMap, timeSpentMap) {
@@ -250,15 +249,30 @@ onUnmounted(() => {
       <div class="filter-row">
         <span class="filter-label">拨测规则</span>
         <el-select v-model="ruleFilter" placeholder="拨测规则" style="width: 160px">
-          <el-option v-for="opt in ruleOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+          <el-option
+            v-for="opt in ruleOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
         <span class="filter-label">拨测池</span>
         <el-select v-model="poolFilter" placeholder="选择拨测池" style="width: 160px" clearable>
-          <el-option v-for="opt in poolOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+          <el-option
+            v-for="opt in poolOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
         <span class="filter-label">拨测源</span>
         <el-select v-model="sourceFilter" placeholder="选择拨测源" style="width: 160px" clearable>
-          <el-option v-for="opt in sourceOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+          <el-option
+            v-for="opt in sourceOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
         <span class="filter-label">时间筛选</span>
         <el-date-picker

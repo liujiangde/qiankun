@@ -10,8 +10,10 @@ const DialRuleManage = () => import('../pages/DialRuleManage/index.vue')
 const DialVisualize = () => import('../pages/DialVisualize/index.vue')
 const DialProbeGroupManage = () => import('../view/probeGroup/index.vue')
 const ProbeGroupCollectionStrategy = () => import('../view/probeGroup/collectionStrategy/index.vue')
-const TrafficForwardingManage = () => import('../view/trafficForwarding/TrafficForwardingManage.vue')
-const TrafficForwardingDetail = () => import('../view/trafficForwarding/TrafficForwardingDetail.vue')
+const TrafficForwardingManage = () =>
+  import('../view/trafficForwarding/TrafficForwardingManage.vue')
+const TrafficForwardingDetail = () =>
+  import('../view/trafficForwarding/TrafficForwardingDetail.vue')
 const TrafficWarning = () => import('../view/warnboce/index.vue')
 const TrafficForwardingAlert = () => import('../view/warnboce/TrafficForwardingAlertTab.vue')
 const NextPage = () => import('../view/nextPage/index.vue')
@@ -29,7 +31,7 @@ export const routes = [
       { path: 'pool', name: 'dial-pool', component: DialPoolManage },
       { path: 'source', name: 'dial-source', component: DialSourceManage },
       { path: 'rule', name: 'dial-rule', component: DialRuleManage },
-      { path: 'viz', name: 'dial-viz', component: DialVisualize },
+      { path: 'viz', name: 'dial-viz', component: DialVisualize }
     ]
   },
   { path: '/dial-pool', redirect: '/dial/pool' },
@@ -49,8 +51,12 @@ export const routes = [
     name: 'probe-group-collection-strategy',
     component: ProbeGroupCollectionStrategy
   },
-  { path: '/trafficForwarding/detail/:id', name: 'trafficForwardingDetail', component: TrafficForwardingDetail },
-  { path: '/nextPage', name: 'nextPage', component: NextPage },
+  {
+    path: '/trafficForwarding/detail/:id',
+    name: 'trafficForwardingDetail',
+    component: TrafficForwardingDetail
+  },
+  { path: '/nextPage', name: 'nextPage', component: NextPage }
 ]
 
 export function createAppRouter({ base = '/', useHash = false } = {}) {

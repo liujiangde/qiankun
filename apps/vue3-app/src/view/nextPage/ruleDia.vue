@@ -237,11 +237,6 @@ const formData = reactive({
   alarmContent: ''
 })
 
-function findLabel(options, value) {
-  const o = options?.find?.((item) => item.value === value)
-  return o ? o.label : ''
-}
-
 const scopeRowRules = {
   groupId: [{ required: true, message: '请选择分组', trigger: 'change' }],
   agentIds: [
@@ -278,8 +273,12 @@ function validatePositiveInteger(label) {
 
 const formRules = {
   ruleName: [{ validator: validateTrimmedRequired('规则名称'), trigger: ['blur', 'change'] }],
-  abnormalDuration: [{ validator: validatePositiveInteger('异常状态持续时间'), trigger: ['blur', 'change'] }],
-  compressTime: [{ validator: validatePositiveInteger('告警压缩时间'), trigger: ['blur', 'change'] }],
+  abnormalDuration: [
+    { validator: validatePositiveInteger('异常状态持续时间'), trigger: ['blur', 'change'] }
+  ],
+  compressTime: [
+    { validator: validatePositiveInteger('告警压缩时间'), trigger: ['blur', 'change'] }
+  ],
   alarmContent: [{ validator: validateTrimmedRequired('告警内容'), trigger: ['blur', 'change'] }]
 }
 
@@ -361,9 +360,10 @@ function splitAgentIds(agentId) {
 
 function normalizeStatus(v) {
   if (v === 1 || v === '1' || v === true || v === '启用' || v === 'enabled') return 1
-  if (v === 0 || v === '0' || v === false || v === '停用' || v === '禁用' || v === 'disabled') return 0
+  if (v === 0 || v === '0' || v === false || v === '停用' || v === '禁用' || v === 'disabled')
+    return 0
   const n = Number(v)
-  return Number.isNaN(n) ? 1 : (n === 0 ? 0 : 1)
+  return Number.isNaN(n) ? 1 : n === 0 ? 0 : 1
 }
 
 /** 从新版 ruleGroup 条目解析 agentId 多选数组（统一为字符串，避免与 option 的 value 类型不一致） */
@@ -387,7 +387,8 @@ function optionValueSet(options) {
 function mergeMissingGroupOptionsForForm() {
   const seen = optionValueSet(groupOptions.value)
   for (const row of formData.scopes) {
-    const gid = row.groupId != null && String(row.groupId).trim() !== '' ? String(row.groupId).trim() : ''
+    const gid =
+      row.groupId != null && String(row.groupId).trim() !== '' ? String(row.groupId).trim() : ''
     if (!gid || seen.has(gid)) continue
     groupOptions.value.push({ label: gid, value: gid })
     seen.add(gid)
@@ -397,7 +398,8 @@ function mergeMissingGroupOptionsForForm() {
 /** 编辑回填：若已选物理机 id 不在该分组选项中，补充占位项 */
 function mergeMissingAgentOptionsForForm() {
   for (const row of formData.scopes) {
-    const gid = row.groupId != null && String(row.groupId).trim() !== '' ? String(row.groupId).trim() : ''
+    const gid =
+      row.groupId != null && String(row.groupId).trim() !== '' ? String(row.groupId).trim() : ''
     if (!gid) continue
     if (!Array.isArray(pmOptionsByGroup[gid])) {
       pmOptionsByGroup[gid] = []
@@ -438,7 +440,8 @@ function resetFormByInitialData() {
   }
   formData.scopes = nextScopes
 
-  formData.abnormalDuration = row.abnormalDuration != null ? Number(row.abnormalDuration) : undefined
+  formData.abnormalDuration =
+    row.abnormalDuration != null ? Number(row.abnormalDuration) : undefined
   formData.compressTime = row.compressTime != null ? Number(row.compressTime) : undefined
   formData.alarmContent = String(row.alarmContent || '')
 }
@@ -517,76 +520,96 @@ async function onConfirm() {
     <div ref="alarmConfigScrollRef" class="alarm-config-scroll">
       <p class="dialog-subtitle">配置物理机告警触发条件和告警内容</p>
 
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="0" label-position="top">
-      <div class="section-title">基本信息</div>
+      <el-form
+        ref="formRef"
+        :model="formData"
+        :rules="formRules"
+        label-width="0"
+        label-position="top"
+      >
+        <div class="section-title">基本信息</div>
 
-      <div class="scope-dynamic-grid scope-duration-grid">
-        <el-form-item class="scope-field" label="规则名称" prop="ruleName" required>
-          <el-input v-model="formData.ruleName" maxlength="100" placeholder="请输入规则名称" clearable />
-        </el-form-item>
-        <el-form-item class="scope-field" label="启用状态" prop="status" required>
-          <el-switch
-            v-model="formData.status"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="启用"
-            inactive-text="停用"
-          />
-        </el-form-item>
-        <div class="scope-grid-trailing-spacer" aria-hidden="true" />
-      </div>
-
-      <div class="section-title">触发条件</div>
-
-      <div v-for="(scopeRow, scopeIndex) in formData.scopes" :key="scopeRow._key" class="scope-dynamic-grid">
-        <el-form-item
-          class="scope-field"
-          :label="scopeIndex === 0 ? '所在分组' : ''"
-          :prop="`scopes.${scopeIndex}.groupId`"
-          :rules="scopeRowRules.groupId"
-          required
-        >
-          <el-select
-            v-model="scopeRow.groupId"
-            placeholder="请选择分组"
-            clearable
-            filterable
-            style="width: 100%"
-            :loading="groupOptionsLoading"
-            @change="onScopeGroupChange(scopeIndex)"
-          >
-            <el-option v-for="item in groupOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item
-          class="scope-field"
-          :label="scopeIndex === 0 ? '所在物理机' : ''"
-          :prop="`scopes.${scopeIndex}.agentIds`"
-          :rules="scopeRowRules.agentIds"
-          required
-        >
-          <el-select
-            v-model="scopeRow.agentIds"
-            placeholder="请选择物理机"
-            multiple
-            collapse-tags
-            collapse-tags-tooltip
-            clearable
-            filterable
-            style="width: 100%"
-            :disabled="!scopeRow.groupId"
-            :loading="!!scopeRow.groupId && !!pmLoadingByGroup[scopeRow.groupId]"
-          >
-            <el-option
-              v-for="item in getPhysicalMachineOptions(scopeRow.groupId)"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+        <div class="scope-dynamic-grid scope-duration-grid">
+          <el-form-item class="scope-field" label="规则名称" prop="ruleName" required>
+            <el-input
+              v-model="formData.ruleName"
+              maxlength="100"
+              placeholder="请输入规则名称"
+              clearable
             />
-          </el-select>
-        </el-form-item>
-        <div class="scope-actions" aria-label="增删分组行">
-          <div class="scope-action-slot">
+          </el-form-item>
+          <el-form-item class="scope-field" label="启用状态" prop="status" required>
+            <el-switch
+              v-model="formData.status"
+              :active-value="1"
+              :inactive-value="0"
+              active-text="启用"
+              inactive-text="停用"
+            />
+          </el-form-item>
+          <div class="scope-grid-trailing-spacer" aria-hidden="true" />
+        </div>
+
+        <div class="section-title">触发条件</div>
+
+        <div
+          v-for="(scopeRow, scopeIndex) in formData.scopes"
+          :key="scopeRow._key"
+          class="scope-dynamic-grid"
+        >
+          <el-form-item
+            class="scope-field"
+            :label="scopeIndex === 0 ? '所在分组' : ''"
+            :prop="`scopes.${scopeIndex}.groupId`"
+            :rules="scopeRowRules.groupId"
+            required
+          >
+            <el-select
+              v-model="scopeRow.groupId"
+              placeholder="请选择分组"
+              clearable
+              filterable
+              style="width: 100%"
+              :loading="groupOptionsLoading"
+              @change="onScopeGroupChange(scopeIndex)"
+            >
+              <el-option
+                v-for="item in groupOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item
+            class="scope-field"
+            :label="scopeIndex === 0 ? '所在物理机' : ''"
+            :prop="`scopes.${scopeIndex}.agentIds`"
+            :rules="scopeRowRules.agentIds"
+            required
+          >
+            <el-select
+              v-model="scopeRow.agentIds"
+              placeholder="请选择物理机"
+              multiple
+              collapse-tags
+              collapse-tags-tooltip
+              clearable
+              filterable
+              style="width: 100%"
+              :disabled="!scopeRow.groupId"
+              :loading="!!scopeRow.groupId && !!pmLoadingByGroup[scopeRow.groupId]"
+            >
+              <el-option
+                v-for="item in getPhysicalMachineOptions(scopeRow.groupId)"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+          <div class="scope-actions" aria-label="增删分组行">
+            <div class="scope-action-slot">
               <el-button
                 v-if="scopeIndex === formData.scopes.length - 1"
                 type="text"
@@ -596,7 +619,7 @@ async function onConfirm() {
               >
                 <el-icon><CirclePlus /></el-icon>
               </el-button>
-          </div>
+            </div>
             <el-button
               type="text"
               plain
@@ -606,73 +629,75 @@ async function onConfirm() {
             >
               <el-icon><CircleClose /></el-icon>
             </el-button>
+          </div>
         </div>
-      </div>
 
-      <!-- 与「分组+物理机+操作列」同一套三列网格，避免 50%/50% 与上行错位 -->
-      <div class="scope-dynamic-grid scope-duration-grid">
-        <el-form-item class="scope-field" label="异常状态持续" prop="abnormalDuration" required>
-          <div class="input-with-append-text">
-            <el-input-number
-              v-model="formData.abnormalDuration"
-              :min="1"
-              :max="99999"
-              :controls="false"
-              placeholder="请输入时间"
-              class="dur-input-grow"
-            />
-            <span class="append-plain">分钟后生成告警</span>
+        <!-- 与「分组+物理机+操作列」同一套三列网格，避免 50%/50% 与上行错位 -->
+        <div class="scope-dynamic-grid scope-duration-grid">
+          <el-form-item class="scope-field" label="异常状态持续" prop="abnormalDuration" required>
+            <div class="input-with-append-text">
+              <el-input-number
+                v-model="formData.abnormalDuration"
+                :min="1"
+                :max="99999"
+                :controls="false"
+                placeholder="请输入时间"
+                class="dur-input-grow"
+              />
+              <span class="append-plain">分钟后生成告警</span>
+            </div>
+          </el-form-item>
+          <el-form-item class="scope-field" label="告警压缩时间" prop="compressTime" required>
+            <div class="input-with-append-text">
+              <el-input-number
+                v-model="formData.compressTime"
+                :min="1"
+                :max="99999"
+                :controls="false"
+                placeholder="请输入时间"
+                class="dur-input-grow"
+              />
+              <span class="append-plain">分钟</span>
+            </div>
+          </el-form-item>
+          <div class="scope-grid-trailing-spacer" aria-hidden="true" />
+        </div>
+
+        <div class="section-title section-gap">告警内容</div>
+
+        <el-form-item>
+          <template #label>
+            <span>标签（点击标签自动在告警内容中添加对应的占位符）</span>
+          </template>
+          <div v-loading="contentTagsLoading" class="tag-bar">
+            <el-tag
+              v-for="(tag, idx) in contentTags"
+              :key="`${tag.token}-${idx}`"
+              class="placeholder-tag"
+              effect="plain"
+              type="info"
+              @click="onTagClick(tag)"
+            >
+              {{ tag.label }}
+            </el-tag>
+            <span v-if="!contentTagsLoading && !contentTags.length" class="tag-empty"
+              >暂无标签</span
+            >
           </div>
         </el-form-item>
-        <el-form-item class="scope-field" label="告警压缩时间" prop="compressTime" required>
-          <div class="input-with-append-text">
-            <el-input-number
-              v-model="formData.compressTime"
-              :min="1"
-              :max="99999"
-              :controls="false"
-              placeholder="请输入时间"
-              class="dur-input-grow"
-            />
-            <span class="append-plain">分钟</span>
-          </div>
+
+        <el-form-item label="告警内容" prop="alarmContent" required>
+          <el-input
+            ref="alarmContentInputRef"
+            v-model="formData.alarmContent"
+            type="textarea"
+            :rows="6"
+            maxlength="4000"
+            show-word-limit
+            placeholder="请输入告警内容，可以点击上方标签插入占位符"
+          />
         </el-form-item>
-        <div class="scope-grid-trailing-spacer" aria-hidden="true" />
-      </div>
-
-      <div class="section-title section-gap">告警内容</div>
-
-      <el-form-item>
-        <template #label>
-          <span>标签（点击标签自动在告警内容中添加对应的占位符）</span>
-        </template>
-        <div v-loading="contentTagsLoading" class="tag-bar">
-          <el-tag
-            v-for="(tag, idx) in contentTags"
-            :key="`${tag.token}-${idx}`"
-            class="placeholder-tag"
-            effect="plain"
-            type="info"
-            @click="onTagClick(tag)"
-          >
-            {{ tag.label }}
-          </el-tag>
-          <span v-if="!contentTagsLoading && !contentTags.length" class="tag-empty">暂无标签</span>
-        </div>
-      </el-form-item>
-
-      <el-form-item label="告警内容" prop="alarmContent" required>
-        <el-input
-          ref="alarmContentInputRef"
-          v-model="formData.alarmContent"
-          type="textarea"
-          :rows="6"
-          maxlength="4000"
-          show-word-limit
-          placeholder="请输入告警内容，可以点击上方标签插入占位符"
-        />
-      </el-form-item>
-    </el-form>
+      </el-form>
     </div>
 
     <template #footer>

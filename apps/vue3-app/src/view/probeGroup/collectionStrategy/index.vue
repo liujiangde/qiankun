@@ -69,7 +69,6 @@ const groupSubtitleLine = computed(() => {
 function goBack() {
   router.push({ name: 'dial-probeGroup' })
 }
-
 </script>
 
 <template>

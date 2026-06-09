@@ -218,7 +218,8 @@ async function fetchMonitoringInformation() {
   const nodeId = props.nodeId
   if (nodeId === '' || nodeId === null || nodeId === undefined) return
   const res = await queryTrafficForwardingMonitoringApi({ nodeId })
-  timeAxis.value = Array.isArray(res?.timeAxis) && res.timeAxis.length ? res.timeAxis : buildTimeAxis()
+  timeAxis.value =
+    Array.isArray(res?.timeAxis) && res.timeAxis.length ? res.timeAxis : buildTimeAxis()
   cpuData.value = Array.isArray(res?.cpuData) ? res.cpuData : []
   memoryData.value = Array.isArray(res?.memoryData) ? res.memoryData : []
   trafficSendData.value = Array.isArray(res?.trafficSendData) ? res.trafficSendData : []

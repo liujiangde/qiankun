@@ -34,13 +34,19 @@ const emit = defineEmits([
       <el-tab-pane v-for="p in policies" :key="p.id" :name="p.id">
         <template #label>
           <span class="policy-tab-label">
-            <span v-if="String(p?.status ?? '').toLowerCase() !== 'enable'" class="policy-tab-label__mark">*</span>
+            <span
+              v-if="String(p?.status ?? '').toLowerCase() !== 'enable'"
+              class="policy-tab-label__mark"
+              >*</span
+            >
             <span>{{ p.name }}</span>
           </span>
         </template>
       </el-tab-pane>
     </el-tabs>
-    <el-button type="primary" link class="policy-tab-bar__add" @click="emit('add')">+ 新增策略</el-button>
+    <el-button type="primary" link class="policy-tab-bar__add" @click="emit('add')"
+      >+ 新增策略</el-button
+    >
   </div>
 </template>
 

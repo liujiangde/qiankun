@@ -23,7 +23,7 @@
 
 ## 当前进度
 
-更新时间：2026-06-08
+更新时间：2026-06-09
 
 已完成第一轮稳定性优化：
 
@@ -63,11 +63,14 @@
 - 阶段五已清理应用构建产物、Playwright 临时结果、个人 VS Code 设置和默认 Vite/Vue 模板资源。
 - React 主应用与 React 子应用的 Vite 构建工具依赖已移动到 `devDependencies`，并同步 `pnpm-lock.yaml`。
 - 已确认保留 `apps/vue3-app/.vscode/extensions.json` 作为 Vue 项目编辑器推荐配置。
+- 阶段六已接入 ESLint flat config，覆盖 React、Vue、普通 JavaScript、Vite/Node 配置和 Playwright 测试。
+- 已接入 Prettier，并通过 `pnpm format` 统一格式化源码、文档和配置文件。
+- 新增 `pnpm lint`，串联 ESLint 与 Prettier 检查；`pnpm check` 已纳入 lint、build 和 e2e。
+- Lint 接入过程中修复未使用变量、空 `catch`、Vue `ref` 访问、Vite ESM 路径和 VXLAN 公共组件直接修改 prop 的问题。
 
 仍待处理：
 
 - 更细的 Vue 子应用首屏加载优化。
-- ESLint 和 Prettier。
 
 ## 阶段一：运行稳定性
 
@@ -209,14 +212,14 @@
 
 ### 任务
 
-- [ ] 增加适配 React、Vue 和普通 JavaScript 的 ESLint。
-- [ ] 增加 Prettier 统一格式。
-- [ ] 增加 lint 规则拦截：
+- [x] 增加适配 React、Vue 和普通 JavaScript 的 ESLint。
+- [x] 增加 Prettier 统一格式。
+- [x] 增加 lint 规则拦截：
   - `debugger`
   - 未使用变量
   - 意外的全局副作用
-- [ ] 增加 `pnpm lint`。
-- [x] 增加 `pnpm check`，当前执行构建和浏览器冒烟测试；Lint 接入后再纳入 `check`。
+- [x] 增加 `pnpm lint`。
+- [x] 增加 `pnpm check`，串联 lint、构建和浏览器冒烟测试。
 - [x] 增加浏览器冒烟测试。
 - [x] 冒烟测试覆盖以下路由：
   - `/`
@@ -227,7 +230,7 @@
 
 ### 验收标准
 
-- [ ] `pnpm lint` 通过。
+- [x] `pnpm lint` 通过。
 - [x] `pnpm check` 通过。
 - [x] 冒烟测试证明两个子应用都能正常挂载。
 - [x] 路由切换问题不再回归。
@@ -249,6 +252,7 @@
 
 ```bash
 pnpm install
+pnpm lint
 pnpm build
 pnpm test:e2e
 pnpm check

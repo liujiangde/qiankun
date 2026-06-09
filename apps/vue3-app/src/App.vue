@@ -9,7 +9,9 @@ const active = computed(() => route.path)
 const onSelect = (index) => router.push(index)
 
 const theme = ref('light')
-const setTheme = (val) => { theme.value = val }
+const setTheme = (val) => {
+  theme.value = val
+}
 provide(ThemeKey, theme)
 provide(ThemeMutatorKey, setTheme)
 </script>
@@ -57,5 +59,5 @@ provide(ThemeMutatorKey, setTheme)
   filter: drop-shadow(0 0 2em #42b883aa);
 }
 
- /* 其余样式使用 Element Plus 组件默认样式 */
+/* 其余样式使用 Element Plus 组件默认样式 */
 </style>

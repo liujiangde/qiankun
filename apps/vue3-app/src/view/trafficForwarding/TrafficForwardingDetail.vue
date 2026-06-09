@@ -85,7 +85,9 @@ watch(
                 <el-col :xs="24" :sm="12" :md="6">
                   <div class="field-label">类别</div>
                   <div class="field-value">
-                    <el-tag size="small" type="success" effect="light">{{ detail.category }}</el-tag>
+                    <el-tag size="small" type="success" effect="light">{{
+                      detail.category
+                    }}</el-tag>
                   </div>
                 </el-col>
                 <el-col :xs="24" :sm="12" :md="6">
@@ -158,7 +160,6 @@ watch(
 </template>
 
 <style scoped>
-
 .traffic-forwarding-detail {
   padding: 0;
 }

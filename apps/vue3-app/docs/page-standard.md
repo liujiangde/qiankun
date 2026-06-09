@@ -68,8 +68,8 @@
 ### 4.4 校验规范
 
 - 动态字段使用路径校验：
-  - ``scopes.${index}.groupId``
-  - ``scopes.${index}.agentIds``
+  - `scopes.${index}.groupId`
+  - `scopes.${index}.agentIds`
 - 必填项至少包括：规则名称、分组、物理机、异常时长、压缩时长、告警内容。
 
 ## 5. 数据模型规范
@@ -78,9 +78,7 @@
 
 ```json
 {
-  "ruleGroup": [
-    { "groupId": "1", "agentId": "1,2,3" }
-  ],
+  "ruleGroup": [{ "groupId": "1", "agentId": "1,2,3" }],
   "relation": "OR"
 }
 ```
@@ -125,4 +123,3 @@
 - [ ] 启用/停用/删除确认框可用，取消不调用接口，失败有错误提示。
 - [ ] 下拉接口字段映射正确（`groupId/groupName`、`agentId/agentName`）。
 - [ ] 异常场景可恢复：接口报错后不崩溃，loading 状态能正确回收。
-

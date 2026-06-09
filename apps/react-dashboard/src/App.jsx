@@ -1,15 +1,15 @@
 const cards = [
   { label: 'Active users', value: '12,480', trend: '+8.2%' },
   { label: 'Orders', value: '1,926', trend: '+4.7%' },
-  { label: 'Conversion', value: '7.8%', trend: '+1.1%' },
-];
+  { label: 'Conversion', value: '7.8%', trend: '+1.1%' }
+]
 
 const rows = [
   ['North', '$86,240', 'Healthy'],
   ['South', '$72,910', 'Watch'],
   ['East', '$94,305', 'Healthy'],
-  ['West', '$68,122', 'Improve'],
-];
+  ['West', '$68,122', 'Improve']
+]
 
 export default function App({ hostProps }) {
   return (
@@ -47,9 +47,7 @@ export default function App({ hostProps }) {
                 <td>{region}</td>
                 <td>{revenue}</td>
                 <td>
-                  <span className={`pill ${status.toLowerCase()}`}>
-                    {status}
-                  </span>
+                  <span className={`pill ${status.toLowerCase()}`}>{status}</span>
                 </td>
               </tr>
             ))}
@@ -57,5 +55,5 @@ export default function App({ hostProps }) {
         </table>
       </section>
     </div>
-  );
+  )
 }

@@ -10,7 +10,9 @@
 import { toRaw } from 'vue'
 
 /** 策略名称：各类型子页表单项共用 */
-export const policyNameRequiredRule = [{ required: true, message: '请输入策略名称', trigger: 'blur' }]
+export const policyNameRequiredRule = [
+  { required: true, message: '请输入策略名称', trigger: 'blur' }
+]
 
 /**
  * 按 path（如 rule.0.field）从对象取值

@@ -68,9 +68,10 @@ function clearFilterWatchTimer() {
 
 function normalizeStatus(v) {
   if (v === 1 || v === '1' || v === true || v === '启用' || v === 'enabled') return 1
-  if (v === 0 || v === '0' || v === false || v === '停用' || v === '禁用' || v === 'disabled') return 0
+  if (v === 0 || v === '0' || v === false || v === '停用' || v === '禁用' || v === 'disabled')
+    return 0
   const n = Number(v)
-  return Number.isNaN(n) ? 0 : (n === 1 ? 1 : 0)
+  return Number.isNaN(n) ? 0 : n === 1 ? 1 : 0
 }
 
 function splitAgentIds(agentId) {
@@ -146,7 +147,14 @@ function renderAlertConditionTooltip(row) {
       .join('\n')
   }
   const type = String(meta.type || '').toLowerCase()
-  const typeText = type === 'all' ? '全部满足' : type === 'any' ? '任一满足' : type === 'count' ? '至少满足N个' : type || '-'
+  const typeText =
+    type === 'all'
+      ? '全部满足'
+      : type === 'any'
+        ? '任一满足'
+        : type === 'count'
+          ? '至少满足N个'
+          : type || '-'
   const threshold = Number(meta.threshold || 0)
   if (type === 'count') {
     return `条件类型：${typeText}\n阈值：${threshold || 1}`
@@ -170,7 +178,8 @@ function buildRequestBody() {
   }
   const keyword = String(query.keyword ?? '').trim()
   if (keyword) body.keyword = keyword
-  if (query.status !== '' && query.status !== null && query.status !== undefined) body.status = Number(query.status)
+  if (query.status !== '' && query.status !== null && query.status !== undefined)
+    body.status = Number(query.status)
   if (query.sortField) body.sortField = query.sortField
   if (query.sortMode) body.sortMode = query.sortMode
   return body
@@ -369,8 +378,19 @@ async function onDelete(row) {
             <el-col :xs="24" :sm="24" :md="10">
               <el-form-item label="规则状态">
                 <div class="status-with-actions">
-                  <el-select v-model="query.status" placeholder="全部" clearable style="width: 160px" @clear="onStatusClear">
-                    <el-option v-for="item in statusOptions" :key="String(item.value)" :label="item.label" :value="item.value" />
+                  <el-select
+                    v-model="query.status"
+                    placeholder="全部"
+                    clearable
+                    style="width: 160px"
+                    @clear="onStatusClear"
+                  >
+                    <el-option
+                      v-for="item in statusOptions"
+                      :key="String(item.value)"
+                      :label="item.label"
+                      :value="item.value"
+                    />
                   </el-select>
                   <div class="filter-actions">
                     <el-button type="primary" @click="onSearch">查询</el-button>
@@ -381,12 +401,8 @@ async function onDelete(row) {
             </el-col>
             <el-col :xs="24" :sm="24" :md="7">
               <el-form-item label-width="0" class="actions-form-item">
-                <el-button type="primary" @click="onCreate">
-                  创建规则
-                </el-button>
-                <el-button @click="onOpenImportResult">
-                  导入结果
-                </el-button>
+                <el-button type="primary" @click="onCreate"> 创建规则 </el-button>
+                <el-button @click="onOpenImportResult"> 导入结果 </el-button>
               </el-form-item>
             </el-col>
           </el-row>
@@ -402,7 +418,12 @@ async function onDelete(row) {
         @sort-change="onTableSortChange"
       >
         <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="alarmContent" label="告警内容" min-width="220" show-overflow-tooltip />
+        <el-table-column
+          prop="alarmContent"
+          label="告警内容"
+          min-width="220"
+          show-overflow-tooltip
+        />
         <el-table-column label="告警条件" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
             <el-tooltip :content="renderAlertConditionTooltip(row)" placement="top" raw-content>
@@ -410,9 +431,24 @@ async function onDelete(row) {
             </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column prop="abnormalDuration" label="异常持续时长(分钟)" min-width="150" align="center" />
-        <el-table-column prop="compressTime" label="告警压缩时间(分钟)" min-width="150" align="center" />
-        <el-table-column prop="lastAlarmTime" label="上次告警时间" min-width="180" sortable="custom" />
+        <el-table-column
+          prop="abnormalDuration"
+          label="异常持续时长(分钟)"
+          min-width="150"
+          align="center"
+        />
+        <el-table-column
+          prop="compressTime"
+          label="告警压缩时间(分钟)"
+          min-width="150"
+          align="center"
+        />
+        <el-table-column
+          prop="lastAlarmTime"
+          label="上次告警时间"
+          min-width="180"
+          sortable="custom"
+        />
         <el-table-column label="规则状态" min-width="100" align="center">
           <template #default="{ row }">
             <el-tag size="small" :type="statusTagType(row.status)" effect="light">
@@ -425,7 +461,13 @@ async function onDelete(row) {
         <el-table-column label="操作" min-width="280" fixed="right" align="center">
           <template #default="{ row }">
             <el-space :size="6">
-              <el-button class="row-action-btn" link type="primary" size="small" @click="onEdit(row)">
+              <el-button
+                class="row-action-btn"
+                link
+                type="primary"
+                size="small"
+                @click="onEdit(row)"
+              >
                 编辑
               </el-button>
               <el-button

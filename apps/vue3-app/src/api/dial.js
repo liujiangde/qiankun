@@ -40,7 +40,9 @@ function buildPagedResponse(list, current, size) {
 }
 
 function queryTbDetectionAlertListByMock(params) {
-  const keyword = String(params.query ?? '').trim().toLowerCase()
+  const keyword = String(params.query ?? '')
+    .trim()
+    .toLowerCase()
   const fromMs = params.from ? toTimeMs(`${params.from}T00:00:00`) : 0
   const toMs = params.to ? toTimeMs(`${params.to}T23:59:59`) : Number.MAX_SAFE_INTEGER
 
@@ -49,8 +51,11 @@ function queryTbDetectionAlertListByMock(params) {
     const inRange = time >= fromMs && time <= toMs
     if (!inRange) return false
     if (!keyword) return true
-    return [record.content, record.ruleName, record.target]
-      .some((field) => String(field ?? '').toLowerCase().includes(keyword))
+    return [record.content, record.ruleName, record.target].some((field) =>
+      String(field ?? '')
+        .toLowerCase()
+        .includes(keyword)
+    )
   })
 
   if (params.orderBy === 'createTime' && params.order) {
@@ -203,7 +208,9 @@ export async function deleteDialRuleApi(id) {
 
 export async function createDialRuleApi(payload) {
   await delay(300)
-  const id = dialRuleMockStore.length ? Math.max(...dialRuleMockStore.map((rule) => rule.id)) + 1 : 1
+  const id = dialRuleMockStore.length
+    ? Math.max(...dialRuleMockStore.map((rule) => rule.id)) + 1
+    : 1
   const record = buildDialRuleRecord(payload, {
     id,
     creator: '当前用户',
@@ -262,7 +269,9 @@ export async function queryDialPoolListApi(params) {
 
 export async function createDialPoolApi(payload) {
   await delay(300)
-  const id = dialPoolMockStore.length ? Math.max(...dialPoolMockStore.map((pool) => pool.id)) + 1 : 1
+  const id = dialPoolMockStore.length
+    ? Math.max(...dialPoolMockStore.map((pool) => pool.id)) + 1
+    : 1
   const record = {
     id,
     name: payload.name,
@@ -307,7 +316,9 @@ export async function queryDialSourceListApi(params) {
   const allSources = getDialSourceStore(poolId)
   const filtered = allSources.filter((source) => {
     if (!keyword) return true
-    return source.name.includes(keyword) || source.ip.includes(keyword) || source.adder.includes(keyword)
+    return (
+      source.name.includes(keyword) || source.ip.includes(keyword) || source.adder.includes(keyword)
+    )
   })
   const start = (page - 1) * pageSize
   return {
@@ -321,7 +332,10 @@ export async function deleteDialSourceApi(params) {
   await delay(300)
   const key = String(params.poolId || 'default')
   const currentSources = getDialSourceStore(key)
-  dialSourceMockStores.set(key, currentSources.filter((source) => source.id !== params.sourceId))
+  dialSourceMockStores.set(
+    key,
+    currentSources.filter((source) => source.id !== params.sourceId)
+  )
   return true
 }
 
@@ -330,7 +344,10 @@ export async function batchDeleteDialSourceApi(params) {
   const key = String(params.poolId || 'default')
   const ids = new Set(params.sourceIds ?? [])
   const currentSources = getDialSourceStore(key)
-  dialSourceMockStores.set(key, currentSources.filter((source) => !ids.has(source.id)))
+  dialSourceMockStores.set(
+    key,
+    currentSources.filter((source) => !ids.has(source.id))
+  )
   return true
 }
 
@@ -358,7 +375,9 @@ export async function batchAddDialSourcesApi(params) {
     const ip = option?.ip
     if (!ip || existed.has(ip)) continue
     const name = option.name ?? `物理机${String(currentSources.length + 1).padStart(3, '0')}`
-    const id = currentSources.length ? Math.max(...currentSources.map((source) => source.id)) + 1 : 1
+    const id = currentSources.length
+      ? Math.max(...currentSources.map((source) => source.id)) + 1
+      : 1
     currentSources.unshift({
       id,
       name,

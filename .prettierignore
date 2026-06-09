@@ -1,0 +1,11 @@
+node_modules/
+dist/
+apps/**/dist/
+apps/**/node_modules/
+playwright-report/
+test-results/
+.pnpm-store/
+.specstory/
+.specstory-cache/
+.specstory-cache-v2/
+pnpm-lock.yaml

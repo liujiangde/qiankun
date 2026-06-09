@@ -13,7 +13,9 @@ import {
 const TRAFFIC_FORWARD_ALERT_PREFIX = '/tfTrafficForwardAlert'
 const TF_ALARM_RULE_PREFIX = '/apmServer-s1/tf-alarm-rule'
 
-let trafficForwardingNodeMockStore = trafficForwardingNodeMockRecords.map((record) => ({ ...record }))
+let trafficForwardingNodeMockStore = trafficForwardingNodeMockRecords.map((record) => ({
+  ...record
+}))
 let tfAlarmRuleMockStore = tfAlarmRuleMockRecords.map((record) => ({ ...record }))
 
 function delay(ms) {
@@ -26,10 +28,19 @@ function toTimeMs(value) {
 }
 
 function normalizeTfAlarmRuleStatus(value) {
-  if (value === 1 || value === '1' || value === true || value === '启用' || value === 'enabled') return 1
-  if (value === 0 || value === '0' || value === false || value === '停用' || value === '禁用' || value === 'disabled') return 0
+  if (value === 1 || value === '1' || value === true || value === '启用' || value === 'enabled')
+    return 1
+  if (
+    value === 0 ||
+    value === '0' ||
+    value === false ||
+    value === '停用' ||
+    value === '禁用' ||
+    value === 'disabled'
+  )
+    return 0
   const n = Number(value)
-  return Number.isNaN(n) ? 0 : (n === 1 ? 1 : 0)
+  return Number.isNaN(n) ? 0 : n === 1 ? 1 : 0
 }
 
 function isEmptyStatus(value) {
@@ -63,7 +74,9 @@ function inTimeRange(rowTime, from, to) {
 }
 
 function queryTrafficForwardAlertHistoryByMock(params) {
-  const keyword = String(params.keyword ?? '').trim().toLowerCase()
+  const keyword = String(params.keyword ?? '')
+    .trim()
+    .toLowerCase()
   const abnormalStatus = String(params.abnormalStatus ?? '')
   let list = trafficForwardingAlertMockRecords.filter((row) => {
     if (abnormalStatus && row.abnormalStatus !== abnormalStatus) return false
@@ -91,13 +104,18 @@ function queryTrafficForwardAlertHistoryByMock(params) {
 }
 
 function queryTfAlarmRuleListByMock(payload) {
-  const keyword = String(payload.keyword ?? '').trim().toLowerCase()
+  const keyword = String(payload.keyword ?? '')
+    .trim()
+    .toLowerCase()
   const status = payload.status
   let list = tfAlarmRuleMockStore.filter((record) => {
     const okKeyword =
       !keyword ||
-      [record.ruleName, record.alarmContent, record.updateUser]
-        .some((field) => String(field ?? '').toLowerCase().includes(keyword))
+      [record.ruleName, record.alarmContent, record.updateUser].some((field) =>
+        String(field ?? '')
+          .toLowerCase()
+          .includes(keyword)
+      )
     const okStatus = isEmptyStatus(status)
       ? true
       : normalizeTfAlarmRuleStatus(record.status) === normalizeTfAlarmRuleStatus(status)
@@ -181,9 +199,9 @@ export function editTfAlarmRuleApi(payload) {
 export function enableTfAlarmRuleApi(ids) {
   if (mockSwitches.tfAlarmRuleList) {
     const idSet = new Set((Array.isArray(ids) ? ids : [ids]).map(Number))
-    tfAlarmRuleMockStore = tfAlarmRuleMockStore.map((record) => (
+    tfAlarmRuleMockStore = tfAlarmRuleMockStore.map((record) =>
       idSet.has(Number(record.id)) ? { ...record, status: 1, updateTime: getNowText() } : record
-    ))
+    )
     return Promise.resolve({ code: 0, data: true, msg: 'ok', success: true })
   }
   return request.get(`${TF_ALARM_RULE_PREFIX}/enable`, { params: { ids } })
@@ -192,9 +210,9 @@ export function enableTfAlarmRuleApi(ids) {
 export function disableTfAlarmRuleApi(ids) {
   if (mockSwitches.tfAlarmRuleList) {
     const idSet = new Set((Array.isArray(ids) ? ids : [ids]).map(Number))
-    tfAlarmRuleMockStore = tfAlarmRuleMockStore.map((record) => (
+    tfAlarmRuleMockStore = tfAlarmRuleMockStore.map((record) =>
       idSet.has(Number(record.id)) ? { ...record, status: 0, updateTime: getNowText() } : record
-    ))
+    )
     return Promise.resolve({ code: 0, data: true, msg: 'ok', success: true })
   }
   return request.get(`${TF_ALARM_RULE_PREFIX}/disable`, { params: { ids } })
@@ -227,9 +245,7 @@ export function fetchTfAlarmRuleScopeGroupsApi() {
 
 export function fetchTfAlarmRulePhysicalMachinesApi(params) {
   if (mockSwitches.scopeApis) {
-    return delay(160).then(() => [
-      ...(tfAlarmRulePhysicalMachinesByGroup[params?.groupId] || [])
-    ])
+    return delay(160).then(() => [...(tfAlarmRulePhysicalMachinesByGroup[params?.groupId] || [])])
   }
   // 指定分组下的物理机列表，params 通常包含 groupId。
   return request.get(`${TF_ALARM_RULE_PREFIX}/agent/options`, { params })
@@ -241,7 +257,9 @@ export function fetchTfAlarmRuleImportResultApi() {
 
 export async function queryTrafficForwardingListApi(params) {
   await delay(250)
-  const hostKeyword = String(params.physicalHost ?? '').trim().toLowerCase()
+  const hostKeyword = String(params.physicalHost ?? '')
+    .trim()
+    .toLowerCase()
   const ipKeyword = String(params.physicalIP ?? '').trim()
   const groupKeyword = String(params.group ?? '').trim()
   const category = String(params.category ?? '')

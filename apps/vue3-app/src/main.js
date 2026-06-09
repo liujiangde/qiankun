@@ -26,9 +26,7 @@ function teardownAuthExpiredHandler() {
 // render 同时支持两种运行方式：被 qiankun 挂载，以及作为普通 Vue 应用独立运行。
 function render(props = {}) {
   const container = props.container
-  const mountPoint = container
-    ? container.querySelector('#app')
-    : document.getElementById('app')
+  const mountPoint = container ? container.querySelector('#app') : document.getElementById('app')
   const router = createAppRouter({
     base: props.routerBase || '/',
     // qiankun 模式使用 hash 路由，避免 Vue 内部路由污染主应用 pathname。

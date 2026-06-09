@@ -69,7 +69,7 @@ const CRON_FIELD_RANGES_5 = [
   { min: 0, max: 23 }, // 时
   { min: 1, max: 31 }, // 日
   { min: 1, max: 12 }, // 月
-  { min: 0, max: 7 }   // 周 (0 和 7 都表示周日)
+  { min: 0, max: 7 } // 周 (0 和 7 都表示周日)
 ]
 const CRON_FIELD_RANGES_6 = [
   { min: 0, max: 59 }, // 秒
@@ -232,7 +232,7 @@ function buildPayload() {
     isOpen: form.isOpen,
     alertCondition: form.isOpen ? form.alertCondition : '',
     alertContent: form.isOpen ? form.alertContent.trim() : '',
-    compressTime: form.isOpen ? (Number(form.compressTime) || 30) : 0
+    compressTime: form.isOpen ? Number(form.compressTime) || 30 : 0
   }
 }
 
@@ -329,7 +329,12 @@ async function onTest() {
 
       <el-form-item label="拨测方式" prop="method" required>
         <el-select v-model="form.method" placeholder="选择拨测方式" style="width: 100%">
-          <el-option v-for="opt in methodOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+          <el-option
+            v-for="opt in methodOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
         </el-select>
       </el-form-item>
 
@@ -369,11 +374,7 @@ async function onTest() {
             </el-select>
           </el-form-item>
           <el-form-item prop="port" class="port-field">
-            <el-input
-              v-model="form.port"
-              placeholder="端口"
-              clearable
-            />
+            <el-input v-model="form.port" placeholder="端口" clearable />
           </el-form-item>
         </div>
       </el-form-item>
@@ -383,7 +384,13 @@ async function onTest() {
       </el-form-item>
 
       <el-form-item label="超时时间(ms)" prop="timeoutMs" required>
-        <el-input-number v-model="form.timeoutMs" :min="1" :max="300000" :step="1000" style="width: 100%" />
+        <el-input-number
+          v-model="form.timeoutMs"
+          :min="1"
+          :max="300000"
+          :step="1000"
+          style="width: 100%"
+        />
       </el-form-item>
 
       <el-form-item label="重试次数" prop="retry" required>
@@ -396,7 +403,11 @@ async function onTest() {
 
       <template v-if="form.isOpen">
         <el-form-item label="告警条件" prop="alertCondition" required>
-          <el-select v-model="form.alertCondition" placeholder="选择异常拨测源个数" style="width: 100%">
+          <el-select
+            v-model="form.alertCondition"
+            placeholder="选择异常拨测源个数"
+            style="width: 100%"
+          >
             <el-option
               v-for="opt in alertConditionOptions"
               :key="opt.value"

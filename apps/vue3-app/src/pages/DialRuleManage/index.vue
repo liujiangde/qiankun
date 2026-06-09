@@ -103,7 +103,9 @@ async function onStart(row) {
     await startDialRuleApi(row.id)
     ElMessage.success('已启动')
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 用户取消确认框时保持当前状态，不需要额外提示。
+  }
 }
 
 async function onStop(row) {
@@ -116,7 +118,9 @@ async function onStop(row) {
     await stopDialRuleApi(row.id)
     ElMessage.success('已停止')
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 用户取消确认框时保持当前状态，不需要额外提示。
+  }
 }
 
 const createVisible = ref(false)
@@ -138,7 +142,9 @@ async function onDelete(row) {
     await deleteDialRuleApi(row.id)
     ElMessage.success('已删除')
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 用户取消删除确认框时保持当前列表，不需要额外提示。
+  }
 }
 
 function onExport(row) {
@@ -155,7 +161,9 @@ async function onCreateSubmit(payload) {
     ElMessage.success('创建成功')
     page.value = 1
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 请求层已统一提示错误，这里避免重复提示。
+  }
 }
 
 async function onEditSubmit(payload) {
@@ -165,7 +173,9 @@ async function onEditSubmit(payload) {
     await updateDialRuleApi(id, payload)
     ElMessage.success('修改成功')
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 请求层已统一提示错误，这里避免重复提示。
+  }
 }
 
 function onBatchExport() {
@@ -190,11 +200,21 @@ function onBatchImport() {
           />
           <span class="filter-label">拨测方式:</span>
           <el-select v-model="methodFilter" placeholder="全部" style="width: 120px" clearable>
-            <el-option v-for="opt in methodOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in methodOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
           <span class="filter-label">状态:</span>
           <el-select v-model="statusFilter" placeholder="全部" style="width: 120px" clearable>
-            <el-option v-for="opt in statusFilterOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in statusFilterOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
           <el-button type="primary" @click="onSearch">
             <el-icon><Plus /></el-icon>
@@ -227,7 +247,13 @@ function onBatchImport() {
             <el-tag :type="methodTagType(row.method)" size="small">{{ row.method }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="target" label="目标对象" min-width="180" sortable show-overflow-tooltip />
+        <el-table-column
+          prop="target"
+          label="目标对象"
+          min-width="180"
+          sortable
+          show-overflow-tooltip
+        />
         <el-table-column prop="cron" label="拨测频率" min-width="130" sortable />
         <el-table-column prop="timeout" label="超时时间" min-width="100" sortable />
         <el-table-column prop="retry" label="重试次数" min-width="90" sortable />
@@ -235,7 +261,9 @@ function onBatchImport() {
         <el-table-column prop="updatedAt" label="最后修改时间" min-width="120" sortable />
         <el-table-column label="状态" min-width="90" align="center">
           <template #default="{ row }">
-            <span class="status" :class="row.status === '运行中' ? 'running' : 'stopped'">{{ row.status }}</span>
+            <span class="status" :class="row.status === '运行中' ? 'running' : 'stopped'">{{
+              row.status
+            }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" min-width="340" fixed="right" align="center">
@@ -287,7 +315,11 @@ function onBatchImport() {
       </div>
     </el-card>
 
-    <CreateRuleDialog v-model="createVisible" :pool-options="poolOptions" @submit="onCreateSubmit" />
+    <CreateRuleDialog
+      v-model="createVisible"
+      :pool-options="poolOptions"
+      @submit="onCreateSubmit"
+    />
     <CreateRuleDialog
       v-model="editVisible"
       title="修改拨测规则"

@@ -1,5 +1,14 @@
 <script setup>
-import { ref, reactive, watchEffect, readonly, shallowReactive, markRaw, nextTick, inject } from 'vue'
+import {
+  ref,
+  reactive,
+  watchEffect,
+  readonly,
+  shallowReactive,
+  markRaw,
+  nextTick,
+  inject
+} from 'vue'
 import { ThemeKey, ThemeMutatorKey } from '../injectionKeys.js'
 
 // 计数与 nextTick 示例：更新后读取 DOM
@@ -32,22 +41,30 @@ watchEffect((onCleanup) => {
 // readonly 示例：对外只读，写入将被忽略并在开发环境警告
 const innerScore = ref(100)
 const publicScore = readonly(innerScore)
-const tryWriteReadonly = () => { publicScore.value++ }
+const tryWriteReadonly = () => {
+  publicScore.value++
+}
 
 // shallowReactive 示例：仅追踪顶层属性，嵌套对象变更不触发更新
 const shallowState = shallowReactive({ meta: { nested: { count: 0 } } })
-const nestedIncNoTrigger = () => { shallowState.meta.nested.count++ }
+const nestedIncNoTrigger = () => {
+  shallowState.meta.nested.count++
+}
 const replaceTopTrigger = () => {
   shallowState.meta = { nested: { count: shallowState.meta.nested.count } }
 }
 
 // markRaw 示例：将第三方/大型对象标记为非响应式，内部变更不触发更新
 const external = reactive({ raw: markRaw(new Map()) })
-const addRawItemNoTrigger = () => { external.raw.set(Date.now(), Math.random()) }
-const replaceRawTrigger = () => { external.raw = markRaw(new Map(external.raw)) }
+const addRawItemNoTrigger = () => {
+  external.raw.set(Date.now(), Math.random())
+}
+const replaceRawTrigger = () => {
+  external.raw = markRaw(new Map(external.raw))
+}
 
 const theme = inject(ThemeKey, ref('light'))
-const setTheme = inject(ThemeMutatorKey, (v) => {})
+const setTheme = inject(ThemeMutatorKey, () => undefined)
 </script>
 
 <template>
@@ -70,9 +87,9 @@ const setTheme = inject(ThemeMutatorKey, (v) => {})
     <el-divider>readonly</el-divider>
     <el-space>
       <!-- readonly：只读代理，写入将被忽略 -->
-      <el-tag type="success">{{publicScore.value}}只读分数 {{ publicScore }}</el-tag>
-      <el-tag type="success">{{innerScore.value}}实际分数 {{ innerScore }}</el-tag>
-      <el-button type="danger" @click="publicScore++">尝试写入只读分数</el-button>
+      <el-tag type="success">{{ publicScore.value }}只读分数 {{ publicScore }}</el-tag>
+      <el-tag type="success">{{ innerScore.value }}实际分数 {{ innerScore }}</el-tag>
+      <el-button type="danger" @click="tryWriteReadonly">尝试写入只读分数</el-button>
       <el-button type="default" @click="innerScore++">实际分数+1（内部）</el-button>
     </el-space>
 
@@ -94,5 +111,4 @@ const setTheme = inject(ThemeMutatorKey, (v) => {})
   </el-card>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

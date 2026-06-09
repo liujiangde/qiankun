@@ -42,14 +42,26 @@ const slots = useSlots()
 // 内部可变状态：以 props.count 为初始值
 const internalCount = ref(props.count)
 // 操作：在未禁用时自增，并通过 update:count 事件通知父级最新值
-const inc = () => { if (!props.disabled) { internalCount.value++; emit('update:count', internalCount.value) } }
+const inc = () => {
+  if (!props.disabled) {
+    internalCount.value++
+    emit('update:count', internalCount.value)
+  }
+}
 // 操作：提交当前模型与状态，触发 submit 事件
-const submit = () => { emit('submit', { value: modelValue.value, open: open.value, count: internalCount.value }) }
+const submit = () => {
+  emit('submit', { value: modelValue.value, open: open.value, count: internalCount.value })
+}
 
 // defineExpose：对父组件暴露可调用方法
 defineExpose({
-  setOpen: (val) => { open.value = !!val },
-  reset: () => { modelValue.value = ''; internalCount.value = 0 }
+  setOpen: (val) => {
+    open.value = !!val
+  },
+  reset: () => {
+    modelValue.value = ''
+    internalCount.value = 0
+  }
 })
 </script>
 
@@ -58,7 +70,8 @@ defineExpose({
   <el-card v-bind="attrs">
     <template #header>
       <!-- 具名插槽 header；未提供时显示 props.title -->
-      <slot name="header">{{ props.title }}</slot>
+      <slot v-if="slots.header" name="header" />
+      <span v-else>{{ props.title }}</span>
     </template>
 
     <el-form inline>
@@ -87,5 +100,4 @@ defineExpose({
   </el-card>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

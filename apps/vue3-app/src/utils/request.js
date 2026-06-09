@@ -89,9 +89,7 @@ service.interceptors.request.use((config) => {
   const token = getStoredToken()
   if (token) {
     config.headers = config.headers || {}
-    config.headers.Authorization = token.startsWith('Bearer ')
-      ? token
-      : `Bearer ${token}`
+    config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`
   }
   return attachDedupeController(config)
 })
@@ -103,9 +101,7 @@ service.interceptors.response.use(
 
     // 后端常见约定：success=false 代表业务失败，HTTP 状态仍可能是 200。
     if (data && typeof data === 'object' && data.success === false) {
-      return Promise.reject(
-        new Error(data.msg || data.message || '请求失败，请稍后重试')
-      )
+      return Promise.reject(new Error(data.msg || data.message || '请求失败，请稍后重试'))
     }
 
     return data

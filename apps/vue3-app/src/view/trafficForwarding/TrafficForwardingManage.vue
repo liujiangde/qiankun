@@ -12,13 +12,6 @@ import {
 
 const router = useRouter()
 
-const groupOptions = [
-  { label: '全部', value: '' },
-  { label: '生产环境组', value: '生产环境组' },
-  { label: '测试环境组', value: '测试环境组' },
-  { label: '开发环境组', value: '开发环境组' }
-]
-
 const categoryOptions = [
   { label: '全部', value: '' },
   { label: '物理机', value: '物理机' },
@@ -200,11 +193,7 @@ async function onUninstall(row) {
     const content = h('div', { style: { lineHeight: '1.8' } }, [
       h('div', null, `确定要卸载节点“${row.host}”（${row.ip}）上的采集器吗？`),
       h('ul', { style: { margin: '12px 0 0', paddingLeft: '18px' } }, [
-        h(
-          'li',
-          null,
-          '卸载成功后将无法对该采集器执行启动、停止等操作。'
-        ),
+        h('li', null, '卸载成功后将无法对该采集器执行启动、停止等操作。'),
         h('li', null, '如需再次使用，需要重新安装采集器。')
       ])
     ])
@@ -219,8 +208,9 @@ async function onUninstall(row) {
     await uninstallTrafficForwardingApi({ id: row.id })
     ElMessage.success('卸载指令已下发')
     fetchList()
-  } catch (_) {}
-  finally {
+  } catch (_) {
+    // 用户取消卸载确认框，或请求层已统一提示错误。
+  } finally {
     rowActionLoading[row.id] = false
   }
 }
@@ -231,8 +221,9 @@ async function onStart(row) {
     await startTrafficForwardingCollectApi({ id: row.id })
     ElMessage.success(`已下发启动：${row.host}`)
     fetchList()
-  } catch (_) {}
-  finally {
+  } catch (_) {
+    // 请求层已统一提示错误，这里避免重复提示。
+  } finally {
     rowActionLoading[row.id] = false
   }
 }
@@ -243,8 +234,9 @@ async function onStop(row) {
     await stopTrafficForwardingCollectApi({ id: row.id })
     ElMessage.success(`已下发停止：${row.host}`)
     fetchList()
-  } catch (_) {}
-  finally {
+  } catch (_) {
+    // 请求层已统一提示错误，这里避免重复提示。
+  } finally {
     rowActionLoading[row.id] = false
   }
 }
@@ -273,8 +265,18 @@ async function onStop(row) {
             </el-col>
             <el-col :xs="24" :sm="12" :md="6">
               <el-form-item label="类别">
-                <el-select v-model="query.category" placeholder="全部" clearable style="width: 100%">
-                  <el-option v-for="o in categoryOptions" :key="o.value" :label="o.label" :value="o.value" />
+                <el-select
+                  v-model="query.category"
+                  placeholder="全部"
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="o in categoryOptions"
+                    :key="o.value"
+                    :label="o.label"
+                    :value="o.value"
+                  />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -282,22 +284,52 @@ async function onStop(row) {
           <el-row :gutter="16">
             <el-col :xs="24" :sm="12" :md="6">
               <el-form-item label="连通状态">
-                <el-select v-model="query.connectStatus" placeholder="全部" clearable style="width: 100%">
-                  <el-option v-for="o in connectOptions" :key="o.value" :label="o.label" :value="o.value" />
+                <el-select
+                  v-model="query.connectStatus"
+                  placeholder="全部"
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="o in connectOptions"
+                    :key="o.value"
+                    :label="o.label"
+                    :value="o.value"
+                  />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="6">
               <el-form-item label="采集状态">
-                <el-select v-model="query.collectStatus" placeholder="全部" clearable style="width: 100%">
-                  <el-option v-for="o in collectOptions" :key="o.value" :label="o.label" :value="o.value" />
+                <el-select
+                  v-model="query.collectStatus"
+                  placeholder="全部"
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="o in collectOptions"
+                    :key="o.value"
+                    :label="o.label"
+                    :value="o.value"
+                  />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="6">
               <el-form-item label="操作状态">
-                <el-select v-model="query.opStatus" placeholder="全部" clearable style="width: 100%">
-                  <el-option v-for="o in opStatusOptions" :key="o.value" :label="o.label" :value="o.value" />
+                <el-select
+                  v-model="query.opStatus"
+                  placeholder="全部"
+                  clearable
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="o in opStatusOptions"
+                    :key="o.value"
+                    :label="o.label"
+                    :value="o.value"
+                  />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -316,7 +348,13 @@ async function onStop(row) {
         </el-form>
       </div>
 
-      <el-table v-loading="loading" :data="pageData" stripe style="width: 100%" @selection-change="onSelectionChange">
+      <el-table
+        v-loading="loading"
+        :data="pageData"
+        stripe
+        style="width: 100%"
+        @selection-change="onSelectionChange"
+      >
         <el-table-column type="selection" width="48" />
         <el-table-column prop="host" label="物理主机" min-width="150" />
         <el-table-column prop="ip" label="物理IP" min-width="130" />
@@ -328,7 +366,11 @@ async function onStop(row) {
         </el-table-column>
         <el-table-column label="连通状态" min-width="100" align="center">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.connectStatus === '已连接' ? 'success' : 'danger'" effect="light">
+            <el-tag
+              size="small"
+              :type="row.connectStatus === '已连接' ? 'success' : 'danger'"
+              effect="light"
+            >
               {{ row.connectStatus }}
             </el-tag>
           </template>
@@ -338,7 +380,11 @@ async function onStop(row) {
             <el-tag
               size="small"
               :type="
-                row.collectStatus === '正在采集' ? 'primary' : row.collectStatus === '错误' ? 'danger' : 'info'
+                row.collectStatus === '正在采集'
+                  ? 'primary'
+                  : row.collectStatus === '错误'
+                    ? 'danger'
+                    : 'info'
               "
               effect="light"
             >
@@ -350,7 +396,9 @@ async function onStop(row) {
           <template #default="{ row }">
             <span class="op-status-pill" :class="`op-status-${opStatusClass(row.opStatus)}`">
               <el-tooltip
-                v-if="['卸载失败', '启动失败', '停止失败', '超时', '参数错误'].includes(row.opStatus)"
+                v-if="
+                  ['卸载失败', '启动失败', '停止失败', '超时', '参数错误'].includes(row.opStatus)
+                "
                 :content="opStatusErrorText(row.opStatus)"
                 placement="top"
                 effect="dark"
@@ -416,7 +464,6 @@ async function onStop(row) {
 </template>
 
 <style scoped>
-
 .traffic-forwarding-manage {
   padding: 0;
 }

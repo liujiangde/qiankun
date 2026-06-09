@@ -3,7 +3,12 @@ import { ref, reactive, toRef, toRefs, computed, watch, inject } from 'vue'
 import { ThemeKey } from '../injectionKeys.js'
 
 const tableData = ref([
-  { id: 1, date: '2016-05-01', name: 'Tom', address: 'No. 1518, Jinshajiang Road, Putuo District, Shanghai' },
+  {
+    id: 1,
+    date: '2016-05-01',
+    name: 'Tom',
+    address: 'No. 1518, Jinshajiang Road, Putuo District, Shanghai'
+  },
   { id: 2, date: '2016-05-02', name: 'Jerry', address: 'No. 189, Grove St, Los Angeles' },
   { id: 3, date: '2016-05-03', name: 'Lucy', address: 'No. 123, Oxford Road, London' },
   { id: 4, date: '2016-05-04', name: 'Mark', address: 'No. 456, Fifth Ave, New York' },
@@ -45,7 +50,7 @@ const filteredData = computed(() => {
   return tableData.value.filter((row) => {
     const okName = hasName ? String(row.name).toLowerCase().includes(name) : true
     const okRange = hasRange
-      ? (new Date(row.date) >= new Date(range[0]) && new Date(row.date) <= new Date(range[1]))
+      ? new Date(row.date) >= new Date(range[0]) && new Date(row.date) <= new Date(range[1])
       : true
     return okName && okRange
   })
@@ -56,11 +61,15 @@ const pagedData = computed(() => {
   return filteredData.value.slice(start, start + pageSize.value)
 })
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredData.value.length / pageSize.value)))
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredData.value.length / pageSize.value))
+)
 const selectedCount = computed(() => multipleSelection.value.length)
 const nameModel = computed({
   get: () => filters.name,
-  set: (val) => { filters.name = val }
+  set: (val) => {
+    filters.name = val
+  }
 })
 
 const multipleSelection = ref([])
@@ -73,23 +82,35 @@ const filtersChanges = ref(0)
 const renderedRows = ref(0)
 const theme = inject(ThemeKey, ref('light'))
 
-watch(nameRef, (val) => {
-  nameHint.value = val ? `按姓名：${val}` : '未设置姓名过滤'
-}, { immediate: true })
+watch(
+  nameRef,
+  (val) => {
+    nameHint.value = val ? `按姓名：${val}` : '未设置姓名过滤'
+  },
+  { immediate: true }
+)
 // - immediate : 初始化时立即执行一次回调，用于首屏或默认值同步
 // - deep : 深度监听对象内部变化，适合嵌套结构；注意开销较大
 // - flush: 'post' : 将回调安排在组件更新完成后执行，适合依赖最新 DOM 或 UI 的逻辑
-watch(filters, () => {
-  filtersChanges.value += 1
-}, { deep: true })
+watch(
+  filters,
+  () => {
+    filtersChanges.value += 1
+  },
+  { deep: true }
+)
 
-watch(pagedData, (rows) => {
-  renderedRows.value = rows.length
-}, { flush: 'post', immediate: true })
+watch(
+  pagedData,
+  (rows) => {
+    renderedRows.value = rows.length
+  },
+  { flush: 'post', immediate: true }
+)
 </script>
 
 <template>
-  <el-card style="margin-bottom: 12px;">
+  <el-card style="margin-bottom: 12px">
     <el-form inline>
       <el-form-item label="主题">
         <el-tag>{{ theme }}</el-tag>
@@ -98,7 +119,12 @@ watch(pagedData, (rows) => {
         <el-input v-model="nameRef" placeholder="输入姓名" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="姓名(计算属性)">
-        <el-input v-model="nameModel" placeholder="通过 computed 代理" clearable style="width: 220px" />
+        <el-input
+          v-model="nameModel"
+          placeholder="通过 computed 代理"
+          clearable
+          style="width: 220px"
+        />
       </el-form-item>
       <el-form-item label="日期">
         <el-date-picker
@@ -129,7 +155,7 @@ watch(pagedData, (rows) => {
     <el-table-column prop="address" label="地址" />
   </el-table>
 
-  <div style="padding: 12px 0;">
+  <div style="padding: 12px 0">
     <el-pagination
       v-model:current-page="page"
       v-model:page-size="pageSize"
@@ -137,7 +163,7 @@ watch(pagedData, (rows) => {
       :total="filteredData.length"
       layout="sizes, prev, pager, next, total"
     />
-    <el-space style="margin-top: 8px;">
+    <el-space style="margin-top: 8px">
       <el-tag type="info">已选 {{ selectedCount }} 行</el-tag>
       <el-tag type="success">共 {{ totalPages }} 页</el-tag>
       <el-tag type="warning">{{ nameHint }}</el-tag>
@@ -147,5 +173,4 @@ watch(pagedData, (rows) => {
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -1,16 +1,16 @@
 const services = [
   {
     name: 'main',
-    url: 'http://localhost:7100',
+    url: 'http://localhost:7100'
   },
   {
     name: 'react-dashboard',
-    url: process.env.VITE_REACT_DASHBOARD_ENTRY || 'http://localhost:7101',
+    url: process.env.VITE_REACT_DASHBOARD_ENTRY || 'http://localhost:7101'
   },
   {
     name: 'vue3-app',
-    url: process.env.VITE_VUE3_APP_ENTRY || 'http://localhost:7102',
-  },
+    url: process.env.VITE_VUE3_APP_ENTRY || 'http://localhost:7102'
+  }
 ]
 
 function normalizeUrl(url) {
@@ -27,21 +27,21 @@ async function checkService(service) {
   try {
     const response = await fetch(url, {
       method: 'HEAD',
-      signal: controller.signal,
+      signal: controller.signal
     })
 
     return {
       ...service,
       url,
       ok: response.ok,
-      status: response.status,
+      status: response.status
     }
   } catch (error) {
     return {
       ...service,
       url,
       ok: false,
-      error: error.message,
+      error: error.message
     }
   } finally {
     clearTimeout(timeout)

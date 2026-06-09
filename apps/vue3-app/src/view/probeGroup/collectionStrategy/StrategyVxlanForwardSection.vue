@@ -3,7 +3,7 @@
  * VXLAN 转发配置公共区块（物理机 / 虚机 / 容器复用）
  *
  * 设计约定：
- * - 仅渲染字段，不持有业务状态；数据由父组件通过 policy 传入并直接双向绑定
+ * - 仅渲染字段，不持有业务状态；字段变化通过事件交回父组件写入
  * - 接收端增删不在本组件做边界判断（最多 3 个、至少 1 个），统一交由父组件组合函数处理
  */
 import { CircleClose } from '@element-plus/icons-vue'
@@ -14,9 +14,19 @@ defineProps({
 })
 
 const emit = defineEmits([
+  'update-field', // 更新 vni / rateLimit 等顶层字段
+  'update-receiver-ip', // 更新指定接收端 IP
   'add-receiver', // 新增接收端行（由父组件决定是否可加）
   'remove-receiver' // 删除接收端行（由父组件决定是否可删）
 ])
+
+function updateField(field, value) {
+  emit('update-field', field, value)
+}
+
+function updateReceiverIp(index, value) {
+  emit('update-receiver-ip', index, value)
+}
 </script>
 
 <template>
@@ -24,19 +34,21 @@ const emit = defineEmits([
     <h3 class="block-title">VXLAN 协议转发</h3>
     <el-form-item label="标识 VNI" prop="vni" class="field-row">
       <el-input
-        v-model="policy.vni"
+        :model-value="policy.vni"
         class="field-input--vni"
         placeholder="请输入 VNI"
         clearable
+        @update:model-value="updateField('vni', $event)"
       />
     </el-form-item>
     <el-form-item label="限速 (MB/s)" prop="rateLimit" class="field-row">
       <el-input-number
-        v-model="policy.rateLimit"
+        :model-value="policy.rateLimit"
         class="field-input--rate-limit"
         :min="1"
         :max="100000"
         controls-position="right"
+        @update:model-value="updateField('rateLimit', $event)"
       />
     </el-form-item>
 
@@ -48,7 +60,13 @@ const emit = defineEmits([
     <div v-for="(row, idx) in policy.receivers" :key="row.id" class="receiver-row">
       <span class="receiver-index">接收端 {{ idx + 1 }}</span>
       <el-form-item :prop="`receivers.${idx}.ip`" class="receiver-form-item" label-width="0">
-        <el-input v-model="row.ip" placeholder="请输入 IP 地址" clearable class="receiver-input" />
+        <el-input
+          :model-value="row.ip"
+          placeholder="请输入 IP 地址"
+          clearable
+          class="receiver-input"
+          @update:model-value="updateReceiverIp(idx, $event)"
+        />
       </el-form-item>
       <el-button
         v-if="policy.receivers.length > 1"

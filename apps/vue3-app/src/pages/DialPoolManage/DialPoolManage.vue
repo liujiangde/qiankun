@@ -162,7 +162,9 @@ async function onDelete(row) {
     ElMessage.success('已删除')
     // 删除后让后端分页重新计算（fetchList 内会自动纠正 page 越界）
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 用户取消删除确认框时保持当前列表，不需要额外提示。
+  }
 }
 
 function onManageSources(row) {
@@ -184,13 +186,14 @@ function statusTagType(status) {
   return status === '正常' ? 'success' : 'danger'
 }
 
-
-
 watch([page, pageSize], fetchList, { immediate: true })
-watch(() => [query.region, query.name, query.status], () => {
-  page.value = 1
-  fetchList()
-})
+watch(
+  () => [query.region, query.name, query.status],
+  () => {
+    page.value = 1
+    fetchList()
+  }
+)
 </script>
 
 <template>
@@ -199,7 +202,12 @@ watch(() => [query.region, query.name, query.status], () => {
       <el-form :inline="true" label-width="78px" class="search-form">
         <el-form-item label="所属区域">
           <el-select v-model="query.region" placeholder="全部" style="width: 160px" clearable>
-            <el-option v-for="opt in regionOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in regionOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="拨测池名称">
@@ -207,11 +215,17 @@ watch(() => [query.region, query.name, query.status], () => {
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="query.status" placeholder="全部" style="width: 160px" clearable>
-            <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in statusOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item class="search-actions">
           <el-button type="primary" @click="onSearch">查询</el-button>
+          <el-button @click="onReset">重置</el-button>
           <el-button type="primary" @click="openCreate">
             <el-icon><Plus /></el-icon>
             创建
@@ -232,7 +246,9 @@ watch(() => [query.region, query.name, query.status], () => {
         <el-table-column prop="updatedAt" label="修改日期" min-width="120" sortable="custom" />
         <el-table-column label="状态" min-width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="statusTagType(row.status)" effect="dark" size="small">{{ row.status }}</el-tag>
+            <el-tag :type="statusTagType(row.status)" effect="dark" size="small">{{
+              row.status
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" min-width="260" fixed="right" align="center">
@@ -274,14 +290,23 @@ watch(() => [query.region, query.name, query.status], () => {
       @submit="onCreateSubmit"
     />
 
-    <el-dialog v-model="dialogVisible" :title="dialogMode === 'create' ? '创建拨测池' : '编辑拨测池'" width="560px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogMode === 'create' ? '创建拨测池' : '编辑拨测池'"
+      width="560px"
+    >
       <el-form label-width="90px">
         <el-form-item label="拨测池名称">
           <el-input v-model="form.name" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="所属区域">
           <el-select v-model="form.region" placeholder="请选择" style="width: 220px">
-            <el-option v-for="opt in regionOptions.filter((o) => o.value)" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in regionOptions.filter((o) => o.value)"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">

@@ -49,12 +49,23 @@ function readCount(propName, resultKeys) {
 }
 
 const totalCount = computed(() => readCount('total', ['total', 'totalCount', 'count']))
-const createdCount = computed(() => readCount('created', ['created', 'createSuccess', 'insertSuccess', 'addSuccess']))
-const updatedCount = computed(() => readCount('updated', ['updated', 'updateSuccess', 'modifySuccess']))
-const failedCount = computed(() => readCount('failed', ['failed', 'fail', 'failCount', 'failureCount']))
+const createdCount = computed(() =>
+  readCount('created', ['created', 'createSuccess', 'insertSuccess', 'addSuccess'])
+)
+const updatedCount = computed(() =>
+  readCount('updated', ['updated', 'updateSuccess', 'modifySuccess'])
+)
+const failedCount = computed(() =>
+  readCount('failed', ['failed', 'fail', 'failCount', 'failureCount'])
+)
 
 const failureReasons = computed(() => {
-  const rawReasons = props.reasons ?? props.result?.reasons ?? props.result?.failReasons ?? props.result?.errors ?? []
+  const rawReasons =
+    props.reasons ??
+    props.result?.reasons ??
+    props.result?.failReasons ??
+    props.result?.errors ??
+    []
   const sourceReasons = Array.isArray(rawReasons) ? rawReasons : [rawReasons]
   return sourceReasons
     .map((item) => {
@@ -100,12 +111,16 @@ function onDialogClose() {
           <span class="stat-value" :class="`stat-value--${item.className}`">{{ item.value }}</span>
         </div>
       </div>
-      
+
       <div class="failure-section">
         <div class="failure-title">失败原因：</div>
         <div class="failure-box">
           <template v-if="failureReasons.length">
-            <div v-for="(reason, index) in failureReasons" :key="`${reason}-${index}`" class="failure-line">
+            <div
+              v-for="(reason, index) in failureReasons"
+              :key="`${reason}-${index}`"
+              class="failure-line"
+            >
               {{ reason }}
             </div>
           </template>

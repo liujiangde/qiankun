@@ -218,7 +218,7 @@ watch(
       form.status = '已启用'
     }
 
-    const rawRule = mode === 'edit' && data ? data.rule ?? data.ruleGroup : null
+    const rawRule = mode === 'edit' && data ? (data.rule ?? data.ruleGroup) : null
     const parsed = parseRuleGroupStorage(rawRule)
     if (parsed) {
       form.relation = parsed.relation
@@ -309,9 +309,10 @@ async function runPreview() {
     return
   }
   const payload = buildPreviewPayload()
-  const fetcher = typeof props.fetchMatchedCollectors === 'function'
-    ? props.fetchMatchedCollectors
-    : queryMatchedCollectorsApi
+  const fetcher =
+    typeof props.fetchMatchedCollectors === 'function'
+      ? props.fetchMatchedCollectors
+      : queryMatchedCollectorsApi
   previewLoading.value = true
   try {
     const list = await fetcher(payload)
@@ -367,7 +368,12 @@ async function submit() {
     status: form.status,
     /** 接口字段：JSON 字符串，内含 { ruleGroup: [], relation, ... } */
     rule: buildRuleJsonString(),
-    collectors: selectedCollectors.value.map((c) => ({ id: c.id, name: c.name, ip: c.ip, status: c.status }))
+    collectors: selectedCollectors.value.map((c) => ({
+      id: c.id,
+      name: c.name,
+      ip: c.ip,
+      status: c.status
+    }))
   }
   submitLoading.value = true
   try {
@@ -403,19 +409,35 @@ async function submit() {
     </div>
 
     <!-- 两步共用同一表单 model：基本信息 + ruleGroup / relation -->
-    <el-form ref="formRef" :model="form" label-position="top" :rules="formRules" :validate-on-rule-change="false">
+    <el-form
+      ref="formRef"
+      :model="form"
+      label-position="top"
+      :rules="formRules"
+      :validate-on-rule-change="false"
+    >
       <div v-show="step === 0" class="step-content">
         <el-form-item label="分组名称" prop="name" required>
           <el-input v-model="form.name" placeholder="请输入分组名称" size="large" />
         </el-form-item>
         <el-form-item label="类型" prop="type" required>
           <el-select v-model="form.type" placeholder="请选择类型" size="large">
-            <el-option v-for="opt in typeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in typeOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="归属地" prop="region" required>
           <el-select v-model="form.region" placeholder="请选择归属地" size="large">
-            <el-option v-for="opt in regionOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option
+              v-for="opt in regionOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
           </el-select>
         </el-form-item>
       </div>
@@ -437,15 +459,34 @@ async function submit() {
                   <div class="rule-main">
                     <div class="rule-row-top">
                       <el-select v-model="rule.field" class="rule-field-select">
-                        <el-option v-for="opt in searchFieldOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                        <el-option
+                          v-for="opt in searchFieldOptions"
+                          :key="opt.value"
+                          :label="opt.label"
+                          :value="opt.value"
+                        />
                       </el-select>
                     </div>
                     <div class="rule-row-bottom">
                       <el-select v-model="rule.operator" class="rule-match-select">
-                        <el-option v-for="opt in operatorOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                        <el-option
+                          v-for="opt in operatorOptions"
+                          :key="opt.value"
+                          :label="opt.label"
+                          :value="opt.value"
+                        />
                       </el-select>
-                      <el-form-item :prop="`ruleGroup.${idx}.value`" :rules="ruleValueRules" class="rule-value-form-item">
-                        <el-input v-model="rule.value" placeholder="请输入值" class="rule-value-input" clearable />
+                      <el-form-item
+                        :prop="`ruleGroup.${idx}.value`"
+                        :rules="ruleValueRules"
+                        class="rule-value-form-item"
+                      >
+                        <el-input
+                          v-model="rule.value"
+                          placeholder="请输入值"
+                          class="rule-value-input"
+                          clearable
+                        />
                       </el-form-item>
                     </div>
                   </div>
@@ -464,37 +505,44 @@ async function submit() {
           </div>
 
           <div class="member-right-wrap">
-          <div class="selected-count">
-            <span class="count-label">匹配的采集器</span>
-            <span class="count">{{ matchedCollectors.length }} 台主机</span>
-          </div>
-          <div class="member-right panel-box">
-            <el-scrollbar height="376px" class="member-scroll">
-              <div v-if="!hasPreviewed" class="member-empty">
-                请配置左侧规则后，点击下方「预览」从服务端查询并展示匹配主机。
-              </div>
-              <div v-else-if="!matchedCollectors.length" class="member-empty">当前规则下暂无匹配主机，可调整规则后再次预览。</div>
-              <template v-else>
-                <div
-                  v-for="c in matchedCollectors"
-                  :key="c.id"
-                  class="collector-row"
-                  :class="{ selected: isSelected(c) }"
-                  @click="toggleCollector(c)"
-                >
-                  <div class="collector-left">
-                    <div>
-                      <div class="collector-name">{{ c.name }}</div>
-                      <div class="collector-ip">IP: {{ c.ip }}</div>
+            <div class="selected-count">
+              <span class="count-label">匹配的采集器</span>
+              <span class="count">{{ matchedCollectors.length }} 台主机</span>
+            </div>
+            <div class="member-right panel-box">
+              <el-scrollbar height="376px" class="member-scroll">
+                <div v-if="!hasPreviewed" class="member-empty">
+                  请配置左侧规则后，点击下方「预览」从服务端查询并展示匹配主机。
+                </div>
+                <div v-else-if="!matchedCollectors.length" class="member-empty">
+                  当前规则下暂无匹配主机，可调整规则后再次预览。
+                </div>
+                <template v-else>
+                  <div
+                    v-for="c in matchedCollectors"
+                    :key="c.id"
+                    class="collector-row"
+                    :class="{ selected: isSelected(c) }"
+                    @click="toggleCollector(c)"
+                  >
+                    <div class="collector-left">
+                      <div>
+                        <div class="collector-name">{{ c.name }}</div>
+                        <div class="collector-ip">IP: {{ c.ip }}</div>
+                      </div>
+                    </div>
+                    <div class="collector-right">
+                      <el-tag
+                        size="small"
+                        :type="c.status === '在线' ? 'success' : 'info'"
+                        effect="plain"
+                        >{{ c.status }}</el-tag
+                      >
                     </div>
                   </div>
-                  <div class="collector-right">
-                    <el-tag size="small" :type="c.status === '在线' ? 'success' : 'info'" effect="plain">{{ c.status }}</el-tag>
-                  </div>
-                </div>
-              </template>
-            </el-scrollbar>
-          </div>
+                </template>
+              </el-scrollbar>
+            </div>
           </div>
         </div>
       </div>
@@ -520,21 +568,63 @@ async function submit() {
 </template>
 
 <style scoped>
-.dlg-step { margin: 2px 0 18px; padding: 0 8px; }
-.step-content { padding: 8px 6px 0; }
+.dlg-step {
+  margin: 2px 0 18px;
+  padding: 0 8px;
+}
+.step-content {
+  padding: 8px 6px 0;
+}
 /* .step-content :deep(.el-input), .step-content :deep(.el-select) { width: 100%; } */
 
-.probe-stepper :deep(.el-step__icon) { width: 28px; height: 28px; font-size: 15px; font-weight: 600; border-width: 2px; }
-.probe-stepper :deep(.el-step__line) { top: 14px; height: 2px; }
-.probe-stepper :deep(.el-step__line-inner) { border-width: 1px !important; }
-.probe-stepper :deep(.el-step.is-process .el-step__icon) { background: #1f6bff; border-color: #1f6bff; color: #fff; }
-.probe-stepper :deep(.el-step.is-success .el-step__icon) { border-color: #2ebf5f; color: #2ebf5f; }
-.probe-stepper :deep(.el-step__title) { margin-top: 10px; font-size: 14px; line-height: 1.2; text-align: center; }
-.probe-stepper :deep(.el-step__title.is-wait) { color: #909399; font-weight: 500; }
-.probe-stepper :deep(.el-step__title.is-process), .probe-stepper :deep(.el-step__title.is-success) { color: #303133; font-weight: 600; }
-.probe-stepper :deep(.el-step__main) { margin-top: 2px; }
+.probe-stepper :deep(.el-step__icon) {
+  width: 28px;
+  height: 28px;
+  font-size: 15px;
+  font-weight: 600;
+  border-width: 2px;
+}
+.probe-stepper :deep(.el-step__line) {
+  top: 14px;
+  height: 2px;
+}
+.probe-stepper :deep(.el-step__line-inner) {
+  border-width: 1px !important;
+}
+.probe-stepper :deep(.el-step.is-process .el-step__icon) {
+  background: #1f6bff;
+  border-color: #1f6bff;
+  color: #fff;
+}
+.probe-stepper :deep(.el-step.is-success .el-step__icon) {
+  border-color: #2ebf5f;
+  color: #2ebf5f;
+}
+.probe-stepper :deep(.el-step__title) {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.2;
+  text-align: center;
+}
+.probe-stepper :deep(.el-step__title.is-wait) {
+  color: #909399;
+  font-weight: 500;
+}
+.probe-stepper :deep(.el-step__title.is-process),
+.probe-stepper :deep(.el-step__title.is-success) {
+  color: #303133;
+  font-weight: 600;
+}
+.probe-stepper :deep(.el-step__main) {
+  margin-top: 2px;
+}
 
-.member-body { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; align-items: stretch; }
+.member-body {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+  align-items: stretch;
+}
 .panel-box {
   background: #fff;
 }
@@ -547,12 +637,30 @@ async function submit() {
   min-height: 44px;
   box-sizing: border-box;
 }
-.panel-content { padding: 12px 10px 10px; min-height: 344px; }
-.rule-scroll { padding: 0 2px 0 0; }
-.rule-title { color: var(--el-text-color-secondary); font-size: 13px; white-space: nowrap; }
-.add-rule-btn { padding: 0; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+.panel-content {
+  padding: 12px 10px 10px;
+  min-height: 344px;
+}
+.rule-scroll {
+  padding: 0 2px 0 0;
+}
+.rule-title {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.add-rule-btn {
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
 
-.member-right-wrap { display: flex; flex-direction: column; min-width: 0; }
+.member-right-wrap {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 .selected-count {
   display: flex;
   justify-content: flex-end;
@@ -564,37 +672,141 @@ async function submit() {
   color: var(--el-text-color-secondary);
   font-size: 13px;
 }
-.count-label { color: var(--el-text-color-secondary); }
-.count { margin-left: 8px; color: #1f6bff; font-weight: 600; }
+.count-label {
+  color: var(--el-text-color-secondary);
+}
+.count {
+  margin-left: 8px;
+  color: #1f6bff;
+  font-weight: 600;
+}
 
-.rule-item { display: flex; align-items: stretch; gap: 10px; padding: 0 2px 8px; }
-.rule-main { flex: 1; min-width: 0; }
-.rule-row-top, .rule-row-bottom { display: flex; align-items: center; gap: 10px; }
-.rule-row-bottom { margin-top: 10px; align-items: flex-start; }
-.rule-field-select { flex: 1; }
-.rule-value-form-item { flex: 1; min-width: 220px; margin-bottom: 0; }
-.rule-value-form-item :deep(.el-form-item__content) { flex: 1; }
-.rule-value-form-item :deep(.el-form-item__error) { padding-top: 2px; }
-.rule-delete-wrap { width: 44px; min-height: 84px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.rule-delete-btn { color: #c0c4cc; width: 100%; height: 100%; min-height: 84px; }
-.rule-match-select { width: 130px; flex-shrink: 0; }
-.rule-value-input { flex: 1; min-width: 220px; }
-.rule-or { margin: 10px 0 2px; text-align: center; color: #909399; font-size: 12px; }
-.member-hint { margin-top: 10px; color: #909399; font-size: 12px; }
+.rule-item {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  padding: 0 2px 8px;
+}
+.rule-main {
+  flex: 1;
+  min-width: 0;
+}
+.rule-row-top,
+.rule-row-bottom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rule-row-bottom {
+  margin-top: 10px;
+  align-items: flex-start;
+}
+.rule-field-select {
+  flex: 1;
+}
+.rule-value-form-item {
+  flex: 1;
+  min-width: 220px;
+  margin-bottom: 0;
+}
+.rule-value-form-item :deep(.el-form-item__content) {
+  flex: 1;
+}
+.rule-value-form-item :deep(.el-form-item__error) {
+  padding-top: 2px;
+}
+.rule-delete-wrap {
+  width: 44px;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rule-delete-btn {
+  color: #c0c4cc;
+  width: 100%;
+  height: 100%;
+  min-height: 84px;
+}
+.rule-match-select {
+  width: 130px;
+  flex-shrink: 0;
+}
+.rule-value-input {
+  flex: 1;
+  min-width: 220px;
+}
+.rule-or {
+  margin: 10px 0 2px;
+  text-align: center;
+  color: #909399;
+  font-size: 12px;
+}
+.member-hint {
+  margin-top: 10px;
+  color: #909399;
+  font-size: 12px;
+}
 
-.list-title { padding: 12px 12px 10px; border-bottom: 1px solid var(--el-border-color-lighter); font-weight: 600; }
-.member-scroll { padding: 6px 6px 8px; }
-.collector-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; border-bottom: 1px solid #f0f2f5; cursor: pointer; }
-.collector-row:last-child { border-bottom: none; }
-.collector-row:hover { background: #f8f9fb; }
-.collector-row.selected { background: #eaf4ff; }
-.collector-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.collector-icon { width: 18px; height: 18px; border-radius: 4px; border: 1px solid #cfd8dc; background: #f7f9fa; }
-.collector-name { font-weight: 600; font-size: 13px; }
-.collector-ip { margin-top: 2px; color: var(--el-text-color-secondary); font-size: 12px; }
+.list-title {
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  font-weight: 600;
+}
+.member-scroll {
+  padding: 6px 6px 8px;
+}
+.collector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+}
+.collector-row:last-child {
+  border-bottom: none;
+}
+.collector-row:hover {
+  background: #f8f9fb;
+}
+.collector-row.selected {
+  background: #eaf4ff;
+}
+.collector-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.collector-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid #cfd8dc;
+  background: #f7f9fa;
+}
+.collector-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.collector-ip {
+  margin-top: 2px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
 
-.dlg-footer { display: flex; justify-content: flex-end; }
-.footer-right { display: flex; align-items: center; gap: 10px; }
+.dlg-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .member-empty {
   padding: 48px 16px;
@@ -605,6 +817,8 @@ async function submit() {
 }
 
 @media (max-width: 900px) {
-  .member-body { grid-template-columns: 1fr; }
+  .member-body {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

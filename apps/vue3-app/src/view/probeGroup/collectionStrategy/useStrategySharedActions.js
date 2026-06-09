@@ -31,7 +31,19 @@ export function useReceiverListActions({
     p.receivers.splice(index, 1)
   }
 
-  return { addReceiver, removeReceiver }
+  function updateVxlanField(field, value) {
+    const p = activePolicy.value
+    if (!p || !['vni', 'rateLimit'].includes(field)) return
+    p[field] = value
+  }
+
+  function updateReceiverIp(index, value) {
+    const receiver = activePolicy.value?.receivers?.[index]
+    if (!receiver) return
+    receiver.ip = value
+  }
+
+  return { addReceiver, removeReceiver, updateVxlanField, updateReceiverIp }
 }
 
 /**
@@ -60,11 +72,7 @@ export function useCollectionSwitchAction({ activePolicy, onToggleCollection }) 
  * - 至少保留 min 条
  * - 下标越界时忽略
  */
-export function useMinListRemoveAction({
-  getList,
-  min = 1,
-  minMsg = `至少保留 ${min} 条`
-}) {
+export function useMinListRemoveAction({ getList, min = 1, minMsg = `至少保留 ${min} 条` }) {
   function removeAt(index) {
     // 用 getList 延迟读取，避免组合式函数创建时就绑定旧引用
     const list = getList?.()

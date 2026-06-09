@@ -109,8 +109,7 @@ watch(
   () => [query.name, query.type, query.region, query.status],
   (nv, ov) => {
     clearFilterDebounceTimer()
-    const selectChanged =
-      !ov || nv[1] !== ov[1] || nv[2] !== ov[2] || nv[3] !== ov[3]
+    const selectChanged = !ov || nv[1] !== ov[1] || nv[2] !== ov[2] || nv[3] !== ov[3]
     const nameChanged = !ov || nv[0] !== ov[0]
     const onlyNameChanged = nameChanged && !selectChanged
 
@@ -147,10 +146,7 @@ function onSearch() {
 function onReset() {
   clearFilterDebounceTimer()
   const hadFilter =
-    String(query.name ?? '').trim() !== '' ||
-    !!query.type ||
-    !!query.region ||
-    !!query.status
+    String(query.name ?? '').trim() !== '' || !!query.type || !!query.region || !!query.status
   query.name = ''
   query.type = ''
   query.region = ''
@@ -254,8 +250,9 @@ async function onDelete(row) {
     await deleteProbeGroupApi(row.id)
     ElMessage.success('已删除')
     fetchList()
-  } catch (_) {}
-  finally {
+  } catch (_) {
+    // 用户取消删除确认框，或请求层已统一提示错误。
+  } finally {
     rowActionLoading[row.id] = false
   }
 }
@@ -271,8 +268,9 @@ async function onEnable(row) {
     await enableProbeGroupApi(row.id)
     ElMessage.success('已启用')
     fetchList()
-  } catch (_) {}
-  finally {
+  } catch (_) {
+    // 用户取消启用确认框，或请求层已统一提示错误。
+  } finally {
     rowActionLoading[row.id] = false
   }
 }
@@ -288,8 +286,9 @@ async function onStop(row) {
     await stopProbeGroupApi(row.id)
     ElMessage.success('已停止')
     fetchList()
-  } catch (_) {}
-  finally {
+  } catch (_) {
+    // 用户取消停止确认框，或请求层已统一提示错误。
+  } finally {
     rowActionLoading[row.id] = false
   }
 }
@@ -376,26 +375,61 @@ function statusTagType(status) {
 <template>
   <div class="page">
     <!-- 筛选与工具栏 -->
-    <div  class="search-card">
+    <div class="search-card">
       <div class="toolbar">
         <div class="left">
           <el-form :model="query" inline class="filter-form">
             <el-form-item label="分组名称">
-              <el-input v-model="query.name" placeholder="请输入分组名称" clearable style="width: 220px" />
+              <el-input
+                v-model="query.name"
+                placeholder="请输入分组名称"
+                clearable
+                style="width: 220px"
+              />
             </el-form-item>
             <el-form-item label="类型">
-              <el-select v-model="query.type" placeholder="请选择类型" style="width: 160px" clearable>
-                <el-option v-for="opt in typeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+              <el-select
+                v-model="query.type"
+                placeholder="请选择类型"
+                style="width: 160px"
+                clearable
+              >
+                <el-option
+                  v-for="opt in typeOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="所属">
-              <el-select v-model="query.region" placeholder="请选择所属" style="width: 160px" clearable>
-                <el-option v-for="opt in regionOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+              <el-select
+                v-model="query.region"
+                placeholder="请选择所属"
+                style="width: 160px"
+                clearable
+              >
+                <el-option
+                  v-for="opt in regionOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="采集集状态">
-              <el-select v-model="query.status" placeholder="请选择状态" style="width: 180px" clearable>
-                <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+              <el-select
+                v-model="query.status"
+                placeholder="请选择状态"
+                style="width: 180px"
+                clearable
+              >
+                <el-option
+                  v-for="opt in statusOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
               </el-select>
             </el-form-item>
           </el-form>
@@ -417,7 +451,11 @@ function statusTagType(status) {
             <el-icon><Upload /></el-icon>
             导入
           </el-button>
-          <el-button :loading="exportLoading" :disabled="!selectedTableRows.length" @click="onExport">
+          <el-button
+            :loading="exportLoading"
+            :disabled="!selectedTableRows.length"
+            @click="onExport"
+          >
             <el-icon><Download /></el-icon>
             导出
           </el-button>
@@ -439,7 +477,13 @@ function statusTagType(status) {
         style="width: 100%"
         @selection-change="onTableSelectionChange"
       >
-        <el-table-column type="selection" width="52" align="center" fixed="left" reserve-selection />
+        <el-table-column
+          type="selection"
+          width="52"
+          align="center"
+          fixed="left"
+          reserve-selection
+        />
         <el-table-column prop="name" label="分组名称" min-width="220" show-overflow-tooltip />
         <el-table-column prop="type" label="类型" min-width="120">
           <template #default="{ row }">
@@ -485,7 +529,13 @@ function statusTagType(status) {
               >
                 停止
               </el-button>
-              <el-button size="small" type="danger" plain :loading="rowActionLoading[row.id]" @click="onDelete(row)">
+              <el-button
+                size="small"
+                type="danger"
+                plain
+                :loading="rowActionLoading[row.id]"
+                @click="onDelete(row)"
+              >
                 <el-icon><Delete /></el-icon>
                 删除
               </el-button>
@@ -497,7 +547,9 @@ function statusTagType(status) {
       <div class="pagination">
         <div class="total">
           共 {{ total }} 条
-          <span v-if="selectedTableRows.length" class="selected-hint">，已选 {{ selectedTableRows.length }} 条</span>
+          <span v-if="selectedTableRows.length" class="selected-hint"
+            >，已选 {{ selectedTableRows.length }} 条</span
+          >
         </div>
         <el-pagination
           v-model:current-page="page"
@@ -524,7 +576,7 @@ function statusTagType(status) {
 </template>
 
 <style scoped>
-.search-card{
+.search-card {
   margin-bottom: 12px;
 }
 .page {

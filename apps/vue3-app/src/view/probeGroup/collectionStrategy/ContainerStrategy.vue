@@ -9,10 +9,7 @@ import { computed, ref, watch } from 'vue'
 import CollectionPolicyTabBar from './CollectionPolicyTabBar.vue'
 import StrategyVxlanForwardSection from './StrategyVxlanForwardSection.vue'
 import { appendReceiverIpRules, policyNameRequiredRule } from './strategyFormRules.js'
-import {
-  useFormValidate,
-  wrapAddPolicyWithValidate
-} from './useStrategyFormCore.js'
+import { useFormValidate, wrapAddPolicyWithValidate } from './useStrategyFormCore.js'
 import {
   useCollectionSwitchAction,
   useMinListRemoveAction,
@@ -110,7 +107,9 @@ function normalizeContainerPolicy(raw, index) {
 
 function normalizeContainerPolicyFromTfRule(raw, index) {
   const d = createContainerPolicy(index + 1)
-  const receivers = normalizeReceiversFromRaw(raw, genPolicyId, d.receivers, { allowReceiverHost: false })
+  const receivers = normalizeReceiversFromRaw(raw, genPolicyId, d.receivers, {
+    allowReceiverHost: false
+  })
   const rows = Array.isArray(raw?.rule?.ruleGroup) ? raw.rule.ruleGroup : []
   // 后端 ruleGroup 可能同 cluster+namespace 多行（不同 workload），前端合并成一行多选 workloads
   const map = new Map()
@@ -166,8 +165,16 @@ function toContainerTfRouteRule(policy) {
   }
 }
 
-const { policies, activeId, activePolicy, addPolicy, removeTab, replacePolicyId, hydratePolicies, markCurrentPolicySaved } =
-  usePolicyTabs(createContainerPolicy)
+const {
+  policies,
+  activeId,
+  activePolicy,
+  addPolicy,
+  removeTab,
+  replacePolicyId,
+  hydratePolicies,
+  markCurrentPolicySaved
+} = usePolicyTabs(createContainerPolicy)
 
 async function loadClusterOptions() {
   try {
@@ -239,42 +246,44 @@ const validateForm = useFormValidate(formRef)
 /** 先校验表单再新增 Tab */
 const onAddPolicyTab = wrapAddPolicyWithValidate(validateForm, addPolicy)
 
-const {
-  startLoading,
-  loadTfRouteRules,
-  onSave,
-  onToggleCollection,
-  onRemovePolicyTab
-} = useTfRouteRulePage({
-  props,
-  type: 2,
-  // 仅处理容器策略
-  strategyTypeName: '容器',
-  policies,
-  activePolicy,
-  hydratePolicies,
-  markCurrentPolicySaved,
-  replacePolicyId,
-  validateForm,
-  removeTab,
-  normalizePolicyFromTfRule: normalizeContainerPolicyFromTfRule,
-  normalizePolicyFromDetail: normalizeContainerPolicy,
-  toTfRouteRulePayload: toContainerTfRouteRule,
-  afterHydrate: afterHydrateContainerRules
-})
+const { startLoading, loadTfRouteRules, onSave, onToggleCollection, onRemovePolicyTab } =
+  useTfRouteRulePage({
+    props,
+    type: 2,
+    // 仅处理容器策略
+    strategyTypeName: '容器',
+    policies,
+    activePolicy,
+    hydratePolicies,
+    markCurrentPolicySaved,
+    replacePolicyId,
+    validateForm,
+    removeTab,
+    normalizePolicyFromTfRule: normalizeContainerPolicyFromTfRule,
+    normalizePolicyFromDetail: normalizeContainerPolicy,
+    toTfRouteRulePayload: toContainerTfRouteRule,
+    afterHydrate: afterHydrateContainerRules
+  })
 
-watch(() => props.groupId, async () => {
-  await loadClusterOptions()
-  await loadTfRouteRules()
-}, { immediate: true })
+watch(
+  () => props.groupId,
+  async () => {
+    await loadClusterOptions()
+    await loadTfRouteRules()
+  },
+  { immediate: true }
+)
 
 /** 动态 rules：含 rule.*、receivers.*.ip */
 function buildContainerFormRules(policy) {
-  const base = appendReceiverIpRules({
-    name: policyNameRequiredRule,
-    vni: [{ required: true, message: '请输入标识 VNI', trigger: 'blur' }],
-    rateLimit: [{ required: true, message: '请输入限速', trigger: 'change' }]
-  }, policy)
+  const base = appendReceiverIpRules(
+    {
+      name: policyNameRequiredRule,
+      vni: [{ required: true, message: '请输入标识 VNI', trigger: 'blur' }],
+      rateLimit: [{ required: true, message: '请输入限速', trigger: 'change' }]
+    },
+    policy
+  )
   policy.rule.forEach((_, i) => {
     base[`rule.${i}.clusterId`] = [{ required: true, message: '请选择集群', trigger: 'change' }]
     base[`rule.${i}.namespace`] = [{ required: true, message: '请选择命名空间', trigger: 'change' }]
@@ -342,7 +351,7 @@ const { removeAt: removeK8sRule } = useMinListRemoveAction({
 })
 
 /** 接收端增删与采集开关切换复用逻辑 */
-const { addReceiver, removeReceiver } = useReceiverListActions({
+const { addReceiver, removeReceiver, updateVxlanField, updateReceiverIp } = useReceiverListActions({
   activePolicy,
   createEmptyReceiver: () => ({ id: genPolicyId(), ip: '' })
 })
@@ -414,11 +423,7 @@ defineExpose({
             <el-button type="primary" link @click="addK8sRule">+ 添加规则</el-button>
           </div>
 
-          <div
-            v-for="(rule, rIdx) in activePolicy.rule"
-            :key="rule.id"
-            class="k8s-rule-card"
-          >
+          <div v-for="(rule, rIdx) in activePolicy.rule" :key="rule.id" class="k8s-rule-card">
             <div class="k8s-rule-card__head">
               <span class="k8s-rule-card__index">规则 {{ rIdx + 1 }}</span>
               <el-button
@@ -432,7 +437,11 @@ defineExpose({
             </div>
             <el-row :gutter="24">
               <el-col :xs="24" :sm="8">
-                <el-form-item label="选择集群" :prop="`rule.${rIdx}.clusterId`" label-position="top">
+                <el-form-item
+                  label="选择集群"
+                  :prop="`rule.${rIdx}.clusterId`"
+                  label-position="top"
+                >
                   <el-select
                     v-model="rule.clusterId"
                     placeholder="请选择集群"
@@ -440,12 +449,21 @@ defineExpose({
                     style="width: 100%"
                     @change="onK8sClusterChange(rule)"
                   >
-                    <el-option v-for="c in clusterOptions" :key="c.value" :label="c.label" :value="c.value" />
+                    <el-option
+                      v-for="c in clusterOptions"
+                      :key="c.value"
+                      :label="c.label"
+                      :value="c.value"
+                    />
                   </el-select>
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="8">
-                <el-form-item label="选择命名空间" :prop="`rule.${rIdx}.namespace`" label-position="top">
+                <el-form-item
+                  label="选择命名空间"
+                  :prop="`rule.${rIdx}.namespace`"
+                  label-position="top"
+                >
                   <el-select
                     v-model="rule.namespace"
                     :disabled="!rule.clusterId"
@@ -464,7 +482,11 @@ defineExpose({
                 </el-form-item>
               </el-col>
               <el-col :xs="24" :sm="8">
-                <el-form-item label="工作负载" :prop="`rule.${rIdx}.workloads`" label-position="top">
+                <el-form-item
+                  label="工作负载"
+                  :prop="`rule.${rIdx}.workloads`"
+                  label-position="top"
+                >
                   <el-select
                     v-model="rule.workloads"
                     multiple
@@ -492,6 +514,8 @@ defineExpose({
 
         <StrategyVxlanForwardSection
           :policy="activePolicy"
+          @update-field="updateVxlanField"
+          @update-receiver-ip="updateReceiverIp"
           @add-receiver="addReceiver"
           @remove-receiver="removeReceiver"
         />

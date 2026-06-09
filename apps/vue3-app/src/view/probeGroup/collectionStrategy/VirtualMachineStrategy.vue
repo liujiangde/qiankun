@@ -9,11 +9,12 @@ import { Close } from '@element-plus/icons-vue'
 import { computed, ref, watch } from 'vue'
 import CollectionPolicyTabBar from './CollectionPolicyTabBar.vue'
 import StrategyVxlanForwardSection from './StrategyVxlanForwardSection.vue'
-import { appendReceiverIpRules, isEmptyString, policyNameRequiredRule } from './strategyFormRules.js'
 import {
-  useFormValidate,
-  wrapAddPolicyWithValidate
-} from './useStrategyFormCore.js'
+  appendReceiverIpRules,
+  isEmptyString,
+  policyNameRequiredRule
+} from './strategyFormRules.js'
+import { useFormValidate, wrapAddPolicyWithValidate } from './useStrategyFormCore.js'
 import {
   useCollectionSwitchAction,
   useMinListRemoveAction,
@@ -116,7 +117,9 @@ function normalizeVmPolicy(raw, index) {
 function normalizeVmPolicyFromTfRule(raw, index) {
   const d = createVmPolicy(index + 1)
   const rule = raw?.rule ?? {}
-  const receivers = normalizeReceiversFromRaw(raw, genPolicyId, d.receivers, { allowReceiverHost: true })
+  const receivers = normalizeReceiversFromRaw(raw, genPolicyId, d.receivers, {
+    allowReceiverHost: true
+  })
   // tfRouteRule.rule.ruleGroup -> rule（每行补本地 id，便于列表渲染/删除）
   const rules = Array.isArray(rule?.ruleGroup)
     ? rule.ruleGroup.map((r) => ({
@@ -159,8 +162,16 @@ function toVmTfRouteRule(policy) {
   }
 }
 
-const { policies, activeId, activePolicy, addPolicy, removeTab, replacePolicyId, hydratePolicies, markCurrentPolicySaved } =
-  usePolicyTabs(createVmPolicy)
+const {
+  policies,
+  activeId,
+  activePolicy,
+  addPolicy,
+  removeTab,
+  replacePolicyId,
+  hydratePolicies,
+  markCurrentPolicySaved
+} = usePolicyTabs(createVmPolicy)
 
 const formRef = ref(null)
 const validateForm = useFormValidate(formRef)
@@ -168,38 +179,36 @@ const validateForm = useFormValidate(formRef)
 /** 先校验表单再新增 Tab（见 wrapAddPolicyWithValidate） */
 const onAddPolicyTab = wrapAddPolicyWithValidate(validateForm, addPolicy)
 
-const {
-  startLoading,
-  loadTfRouteRules,
-  onSave,
-  onToggleCollection,
-  onRemovePolicyTab
-} = useTfRouteRulePage({
-  props,
-  type: 1,
-  // 仅处理虚机策略
-  strategyTypeName: '虚拟机',
-  policies,
-  activePolicy,
-  hydratePolicies,
-  markCurrentPolicySaved,
-  replacePolicyId,
-  validateForm,
-  removeTab,
-  normalizePolicyFromTfRule: normalizeVmPolicyFromTfRule,
-  normalizePolicyFromDetail: normalizeVmPolicy,
-  toTfRouteRulePayload: toVmTfRouteRule
-})
+const { startLoading, loadTfRouteRules, onSave, onToggleCollection, onRemovePolicyTab } =
+  useTfRouteRulePage({
+    props,
+    type: 1,
+    // 仅处理虚机策略
+    strategyTypeName: '虚拟机',
+    policies,
+    activePolicy,
+    hydratePolicies,
+    markCurrentPolicySaved,
+    replacePolicyId,
+    validateForm,
+    removeTab,
+    normalizePolicyFromTfRule: normalizeVmPolicyFromTfRule,
+    normalizePolicyFromDetail: normalizeVmPolicy,
+    toTfRouteRulePayload: toVmTfRouteRule
+  })
 
 watch(() => props.groupId, loadTfRouteRules, { immediate: true })
 
 /** 动态生成 rule.* 的 prop 规则，与当前策略行数一致 */
 function buildVmFormRules(policy) {
-  const base = appendReceiverIpRules({
-    name: policyNameRequiredRule,
-    vni: [{ required: true, message: '请输入标识 VNI', trigger: 'blur' }],
-    rateLimit: [{ required: true, message: '请输入限速', trigger: 'change' }]
-  }, policy)
+  const base = appendReceiverIpRules(
+    {
+      name: policyNameRequiredRule,
+      vni: [{ required: true, message: '请输入标识 VNI', trigger: 'blur' }],
+      rateLimit: [{ required: true, message: '请输入限速', trigger: 'change' }]
+    },
+    policy
+  )
   policy.rule.forEach((_, i) => {
     base[`rule.${i}.field`] = [{ required: true, message: '请选择字段', trigger: 'change' }]
     base[`rule.${i}.operator`] = [{ required: true, message: '请选择运算符', trigger: 'change' }]
@@ -231,7 +240,7 @@ const { removeAt: removeCollectRule } = useMinListRemoveAction({
 })
 
 /** 接收端增删与采集开关切换复用逻辑 */
-const { addReceiver, removeReceiver } = useReceiverListActions({
+const { addReceiver, removeReceiver, updateVxlanField, updateReceiverIp } = useReceiverListActions({
   activePolicy,
   createEmptyReceiver: () => ({ id: genPolicyId(), ip: '' })
 })
@@ -303,11 +312,7 @@ defineExpose({
             <el-button type="primary" link @click="addCollectRule">+ 添加规则</el-button>
           </div>
 
-          <div
-            v-for="(rule, idx) in activePolicy.rule"
-            :key="rule.id"
-            class="rule-row-card"
-          >
+          <div v-for="(rule, idx) in activePolicy.rule" :key="rule.id" class="rule-row-card">
             <span class="rule-row-card__index">规则 {{ idx + 1 }}</span>
             <el-form-item
               :prop="`rule.${idx}.field`"
@@ -315,7 +320,12 @@ defineExpose({
               label-width="0"
             >
               <el-select v-model="rule.field" placeholder="字段" class="rule-row-card__field">
-                <el-option v-for="f in ruleFieldOptions" :key="f.value" :label="f.label" :value="f.value" />
+                <el-option
+                  v-for="f in ruleFieldOptions"
+                  :key="f.value"
+                  :label="f.label"
+                  :value="f.value"
+                />
               </el-select>
             </el-form-item>
             <el-form-item
@@ -324,7 +334,12 @@ defineExpose({
               label-width="0"
             >
               <el-select v-model="rule.operator" placeholder="运算符" class="rule-row-card__op">
-                <el-option v-for="o in ruleOperatorOptions" :key="o.value" :label="o.label" :value="o.value" />
+                <el-option
+                  v-for="o in ruleOperatorOptions"
+                  :key="o.value"
+                  :label="o.label"
+                  :value="o.value"
+                />
               </el-select>
             </el-form-item>
             <el-form-item
@@ -332,7 +347,12 @@ defineExpose({
               class="rule-form-item rule-form-item--value"
               label-width="0"
             >
-              <el-input v-model="rule.value" placeholder="请输入值" clearable class="rule-row-card__value" />
+              <el-input
+                v-model="rule.value"
+                placeholder="请输入值"
+                clearable
+                class="rule-row-card__value"
+              />
             </el-form-item>
             <el-button
               v-if="activePolicy.rule.length > 1"
@@ -349,6 +369,8 @@ defineExpose({
 
         <StrategyVxlanForwardSection
           :policy="activePolicy"
+          @update-field="updateVxlanField"
+          @update-receiver-ip="updateReceiverIp"
           @add-receiver="addReceiver"
           @remove-receiver="removeReceiver"
         />

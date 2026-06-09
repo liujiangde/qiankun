@@ -53,7 +53,9 @@ function normalizeCollectorForList(collector) {
 
 function hitCollectorRule(collector, rule) {
   const text = String(rule.field === 'ip' ? collector.ip : collector.name).toLowerCase()
-  const value = String(rule.value ?? '').trim().toLowerCase()
+  const value = String(rule.value ?? '')
+    .trim()
+    .toLowerCase()
   if (!value) return true
   if (rule.operator === 'equals') return text === value
   if (rule.operator === 'notEquals') return text !== value
@@ -77,7 +79,9 @@ function filterCollectorsLocal(collectors, ruleGroup, type, region, relation) {
 
 export async function queryProbeGroupListApi(params) {
   await delay(250)
-  const nameKeyword = String(params.name ?? '').trim().toLowerCase()
+  const nameKeyword = String(params.name ?? '')
+    .trim()
+    .toLowerCase()
   const type = String(params.type ?? '')
   const region = String(params.region ?? '')
   const status = String(params.status ?? '')
@@ -178,7 +182,7 @@ export function importProbeGroupUploadApi(formData) {
         try {
           const text = String(reader.result ?? '')
           const data = JSON.parse(text)
-          const list = Array.isArray(data) ? data : data?.list ?? data?.rows ?? []
+          const list = Array.isArray(data) ? data : (data?.list ?? data?.rows ?? [])
           if (!Array.isArray(list) || !list.length) {
             reject(new Error('文件中无可导入的分组数据'))
             return
@@ -257,10 +261,7 @@ export async function startCollectionStrategyApi(payload) {
   return { ok: true }
 }
 
-export async function fetchCollectionStrategyDetailApi({
-  probeGroupId,
-  strategyKind = 'pm'
-}) {
+export async function fetchCollectionStrategyDetailApi({ probeGroupId, strategyKind = 'pm' }) {
   void strategyKind
   await delay(360)
   // 采集策略详情页当前统一通过 tfRouteRule/list 回显，此函数保留给旧调用兼容。

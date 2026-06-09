@@ -11,10 +11,7 @@ import { computed, ref, watch } from 'vue'
 import CollectionPolicyTabBar from './CollectionPolicyTabBar.vue'
 import StrategyVxlanForwardSection from './StrategyVxlanForwardSection.vue'
 import { appendReceiverIpRules, policyNameRequiredRule } from './strategyFormRules.js'
-import {
-  useFormValidate,
-  wrapAddPolicyWithValidate
-} from './useStrategyFormCore.js'
+import { useFormValidate, wrapAddPolicyWithValidate } from './useStrategyFormCore.js'
 import { useCollectionSwitchAction, useReceiverListActions } from './useStrategySharedActions.js'
 import {
   normalizeStatusFromRaw,
@@ -81,7 +78,9 @@ function normalizePhysicalPolicy(raw, index) {
 function normalizePhysicalPolicyFromTfRule(raw, index) {
   const d = createPhysicalPolicy(index + 1)
   const rule = raw?.rule ?? {}
-  const receivers = normalizeReceiversFromRaw(raw, genPolicyId, d.receivers, { allowReceiverHost: true })
+  const receivers = normalizeReceiversFromRaw(raw, genPolicyId, d.receivers, {
+    allowReceiverHost: true
+  })
   // tfRouteRule -> 页面模型：rule.interface_name 映射 nicNames；dstIp/vni/rateLimit 映射 VXLAN 字段
   return {
     ...d,
@@ -112,8 +111,16 @@ function toPhysicalTfRouteRule(policy) {
 }
 
 // 多 Tab 状态与增删、回显、保存基线
-const { policies, activeId, activePolicy, addPolicy, removeTab, replacePolicyId, hydratePolicies, markCurrentPolicySaved } =
-  usePolicyTabs(createPhysicalPolicy)
+const {
+  policies,
+  activeId,
+  activePolicy,
+  addPolicy,
+  removeTab,
+  replacePolicyId,
+  hydratePolicies,
+  markCurrentPolicySaved
+} = usePolicyTabs(createPhysicalPolicy)
 
 const formRef = ref(null)
 const validateForm = useFormValidate(formRef)
@@ -121,46 +128,44 @@ const validateForm = useFormValidate(formRef)
 /** Tab「+ 新增策略」：先 el-form 校验，再 addPolicy（未保存脏数据时仍会被拦截） */
 const onAddPolicyTab = wrapAddPolicyWithValidate(validateForm, addPolicy)
 
-const {
-  startLoading,
-  loadTfRouteRules,
-  onSave,
-  onToggleCollection,
-  onRemovePolicyTab
-} = useTfRouteRulePage({
-  props,
-  type: 0,
-  // 仅拉取/保存 type=0（物理机）规则
-  strategyTypeName: '物理机',
-  policies,
-  activePolicy,
-  hydratePolicies,
-  markCurrentPolicySaved,
-  replacePolicyId,
-  validateForm,
-  removeTab,
-  normalizePolicyFromTfRule: normalizePhysicalPolicyFromTfRule,
-  normalizePolicyFromDetail: normalizePhysicalPolicy,
-  toTfRouteRulePayload: toPhysicalTfRouteRule
-})
+const { startLoading, loadTfRouteRules, onSave, onToggleCollection, onRemovePolicyTab } =
+  useTfRouteRulePage({
+    props,
+    type: 0,
+    // 仅拉取/保存 type=0（物理机）规则
+    strategyTypeName: '物理机',
+    policies,
+    activePolicy,
+    hydratePolicies,
+    markCurrentPolicySaved,
+    replacePolicyId,
+    validateForm,
+    removeTab,
+    normalizePolicyFromTfRule: normalizePhysicalPolicyFromTfRule,
+    normalizePolicyFromDetail: normalizePhysicalPolicy,
+    toTfRouteRulePayload: toPhysicalTfRouteRule
+  })
 
 watch(() => props.groupId, loadTfRouteRules, { immediate: true })
 
 /** 组装 el-form rules */
 function buildPhysicalFormRules(policy) {
-  const base = appendReceiverIpRules({
-    name: policyNameRequiredRule,
-    nicNames: [{ required: true, message: '请输入网卡名称', trigger: 'blur' }],
-    vni: [{ required: true, message: '请输入标识 VNI', trigger: 'blur' }],
-    rateLimit: [{ required: true, message: '请输入限速', trigger: 'change' }]
-  }, policy)
+  const base = appendReceiverIpRules(
+    {
+      name: policyNameRequiredRule,
+      nicNames: [{ required: true, message: '请输入网卡名称', trigger: 'blur' }],
+      vni: [{ required: true, message: '请输入标识 VNI', trigger: 'blur' }],
+      rateLimit: [{ required: true, message: '请输入限速', trigger: 'change' }]
+    },
+    policy
+  )
   return base
 }
 
 const formRules = computed(() => buildPhysicalFormRules(activePolicy.value))
 
 /** 接收端增删与采集开关切换复用逻辑 */
-const { addReceiver, removeReceiver } = useReceiverListActions({
+const { addReceiver, removeReceiver, updateVxlanField, updateReceiverIp } = useReceiverListActions({
   activePolicy,
   createEmptyReceiver: () => ({ id: genPolicyId(), ip: '' })
 })
@@ -252,6 +257,8 @@ defineExpose({
 
         <StrategyVxlanForwardSection
           :policy="activePolicy"
+          @update-field="updateVxlanField"
+          @update-receiver-ip="updateReceiverIp"
           @add-receiver="addReceiver"
           @remove-receiver="removeReceiver"
         />

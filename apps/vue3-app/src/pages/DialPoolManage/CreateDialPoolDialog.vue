@@ -26,7 +26,7 @@ function close() {
 function reset() {
   form.name = ''
   form.region = ''
-  formRef?.clearValidate?.()
+  formRef.value?.clearValidate?.()
 }
 
 watch(
@@ -60,7 +60,12 @@ async function onConfirm() {
       </el-form-item>
 
       <el-form-item label="所属区域" prop="region" required>
-        <el-select v-model="form.region" placeholder="选择所属区域" size="large" style="width: 100%">
+        <el-select
+          v-model="form.region"
+          placeholder="选择所属区域"
+          size="large"
+          style="width: 100%"
+        >
           <el-option
             v-for="opt in regionOptions"
             :key="opt.value ?? opt"

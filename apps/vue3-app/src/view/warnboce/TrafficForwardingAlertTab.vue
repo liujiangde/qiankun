@@ -178,7 +178,12 @@ function onTableSortChange({ prop, order }) {
             </el-col>
             <el-col :xs="24" :sm="12" :md="8">
               <el-form-item label="异常状态">
-                <el-select v-model="query.abnormalStatus" placeholder="全部" clearable style="width: 100%">
+                <el-select
+                  v-model="query.abnormalStatus"
+                  placeholder="全部"
+                  clearable
+                  style="width: 100%"
+                >
                   <el-option
                     v-for="opt in abnormalStatusOptions"
                     :key="String(opt.value)"
@@ -237,7 +242,12 @@ function onTableSortChange({ prop, order }) {
         max-height="600"
         @sort-change="onTableSortChange"
       >
-        <el-table-column prop="alarmContent" label="告警内容" min-width="220" show-overflow-tooltip />
+        <el-table-column
+          prop="alarmContent"
+          label="告警内容"
+          min-width="220"
+          show-overflow-tooltip
+        />
         <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip />
         <el-table-column prop="hostIp" label="主机 IP" min-width="130" show-overflow-tooltip />
         <el-table-column prop="hostName" label="主机名称" min-width="140" show-overflow-tooltip />

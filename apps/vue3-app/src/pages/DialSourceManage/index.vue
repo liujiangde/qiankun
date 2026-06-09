@@ -101,7 +101,9 @@ async function onBatchDelete() {
     selection.value = []
     ElMessage.success('已删除')
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 用户取消批量删除确认框时保持当前选择，不需要额外提示。
+  }
 }
 
 async function onDelete(row) {
@@ -117,7 +119,9 @@ async function onDelete(row) {
     })
     ElMessage.success('已删除')
     fetchList()
-  } catch (_) {}
+  } catch (_) {
+    // 用户取消删除确认框时保持当前列表，不需要额外提示。
+  }
 }
 
 watch([page, pageSize], fetchList, { immediate: true })
@@ -169,7 +173,12 @@ watch(
     <el-card shadow="never" class="table-card" v-loading="loading">
       <div class="toolbar">
         <div class="left">
-          <el-input v-model="keyword" placeholder="关键字搜索（物理机名称/IP/添加人）" clearable style="width: 340px" />
+          <el-input
+            v-model="keyword"
+            placeholder="关键字搜索（物理机名称/IP/添加人）"
+            clearable
+            style="width: 340px"
+          />
           <el-button type="primary" @click="onSearch">
             <el-icon><Search /></el-icon>
             查询
@@ -195,7 +204,9 @@ watch(
         <el-table-column prop="addedAt" label="添加时间" min-width="130" sortable />
         <el-table-column label="状态" min-width="100" align="center">
           <template #default="{ row }">
-            <span class="status" :class="row.status === '在线' ? 'ok' : 'bad'">{{ row.status }}</span>
+            <span class="status" :class="row.status === '在线' ? 'ok' : 'bad'">{{
+              row.status
+            }}</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" min-width="140" align="center" fixed="right">
@@ -221,7 +232,11 @@ watch(
       </div>
     </el-card>
 
-    <BatchAddSourceDialog v-model="batchAddVisible" :pool-id="poolInfo.id" @submit="onBatchAddSubmit" />
+    <BatchAddSourceDialog
+      v-model="batchAddVisible"
+      :pool-id="poolInfo.id"
+      @submit="onBatchAddSubmit"
+    />
   </div>
 </template>
 

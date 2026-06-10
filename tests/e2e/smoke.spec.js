@@ -103,3 +103,29 @@ test('Vue app can mount and unmount repeatedly without route leakage', async ({ 
   expect(lifecycle.vueIdle).toBeGreaterThanOrEqual(1)
   expect(lifecycle.vueErrors).toBe(0)
 })
+
+test('host shows actionable prompt when Vue app reports loading error', async ({ page }) => {
+  await page.goto('/vue3-app')
+  await expect(page.getByRole('heading', { name: 'Vue3 App' })).toBeVisible()
+
+  // 模拟 qiankun 加载源码失败时主应用收到的生命周期事件。
+  // 这里不强制关闭 dev server，避免测试依赖外部进程状态。
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new CustomEvent('micro-app-status', {
+        detail: {
+          name: 'vue3-app',
+          status: 'error',
+          message: 'Failed to fetch'
+        }
+      })
+    )
+  })
+
+  const alert = page.getByRole('alert')
+  await expect(alert).toContainText('Vue3 App 加载失败')
+  await expect(alert).toContainText('Failed to fetch')
+  await expect(alert).toContainText('http://localhost:7102')
+  await expect(alert).toContainText('pnpm dev:vue3-app')
+  await expect(activeMicroStatus(page)).toHaveText('error')
+})

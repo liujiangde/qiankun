@@ -213,6 +213,34 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.micro-feedback dl {
+  display: grid;
+  gap: 8px;
+  margin: 6px 0 0;
+}
+
+.micro-feedback dl div {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.micro-feedback dt,
+.micro-feedback dd {
+  margin: 0;
+  font-size: 13px;
+}
+
+.micro-feedback dt {
+  color: #7f1d1d;
+  font-weight: 700;
+}
+
+.micro-feedback dd {
+  color: #451a1a;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 760px) {
   .shell {
     grid-template-columns: 1fr;

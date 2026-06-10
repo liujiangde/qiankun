@@ -1,37 +1,29 @@
 import { useEffect, useMemo, useState } from 'react'
+import {
+  getMicroAppEntry,
+  hostRoutes,
+  HOST_ROUTE_CHANGE_EVENT,
+  microRouteByAppName,
+  normalizeEntryUrl
+} from './routes.js'
 
-const routes = [
-  { path: '/', label: 'Host Overview', title: 'Host Overview' },
-  {
-    path: '/react-dashboard',
-    label: 'React Dashboard',
-    title: 'React Dashboard',
-    appName: 'react-dashboard'
-  },
-  {
-    path: '/vue3-app',
-    label: 'Vue3 App',
-    title: 'Vue3 App',
-    appName: 'vue3-app'
-  }
-]
+const initialMicroStatuses = Object.fromEntries(
+  Object.keys(microRouteByAppName).map((appName) => [appName, 'idle'])
+)
 
-const initialMicroStatuses = {
-  'react-dashboard': 'idle',
-  'vue3-app': 'idle'
-}
-
-const initialMicroErrors = {
-  'react-dashboard': '',
-  'vue3-app': ''
-}
-
-const HOST_ROUTE_CHANGE_EVENT = 'host-route-change'
+const initialMicroErrors = Object.fromEntries(
+  Object.keys(microRouteByAppName).map((appName) => [appName, ''])
+)
 
 function navigateTo(path) {
   // pushState 不会自动触发 popstate，所以主应用额外派发一个内部路由事件。
+  // 事件名和 payload 都与浏览器原生 popstate 分离，避免子应用误把它当成浏览器前进后退。
   window.history.pushState({}, '', path)
-  window.dispatchEvent(new Event(HOST_ROUTE_CHANGE_EVENT))
+  window.dispatchEvent(
+    new CustomEvent(HOST_ROUTE_CHANGE_EVENT, {
+      detail: { path, source: 'host-nav' }
+    })
+  )
 }
 
 function getCurrentPath() {
@@ -43,7 +35,20 @@ function isActiveRoute(path, route) {
 }
 
 function getActiveRoute(path) {
-  return routes.find((route) => route.path !== '/' && path.startsWith(route.path)) || routes[0]
+  return (
+    hostRoutes.find((route) => route.path !== '/' && path.startsWith(route.path)) || hostRoutes[0]
+  )
+}
+
+function buildMicroFailureHint(route, message) {
+  if (!route?.appName) return null
+  const entry = normalizeEntryUrl(getMicroAppEntry(route))
+  return {
+    title: `${route.label} 加载失败`,
+    message: message || `无法访问子应用入口：${entry}`,
+    entry,
+    command: route.devCommand
+  }
 }
 
 // 主应用只维护“哪个微应用应该显示”和“微应用当前生命周期状态”。
@@ -89,6 +94,10 @@ export default function App() {
   const isMicroRoute = Boolean(activeRoute.appName)
   const microStatus = activeRoute.appName ? microStatuses[activeRoute.appName] : 'idle'
   const microError = activeRoute.appName ? microErrors[activeRoute.appName] : ''
+  const failureHint = useMemo(
+    () => (microStatus === 'error' ? buildMicroFailureHint(activeRoute, microError) : null),
+    [activeRoute, microError, microStatus]
+  )
 
   return (
     <div className="shell">
@@ -102,7 +111,7 @@ export default function App() {
         </div>
 
         <nav className="nav-list" aria-label="Application navigation">
-          {routes.map((route) => (
+          {hostRoutes.map((route) => (
             <button
               className={isActiveRoute(path, route) ? 'nav-item active' : 'nav-item'}
               key={route.path}
@@ -145,10 +154,20 @@ export default function App() {
           </section>
         )}
 
-        {isMicroRoute && microStatus === 'error' && (
+        {isMicroRoute && failureHint && (
           <section className="micro-feedback" role="alert">
-            <strong>子应用加载失败</strong>
-            <span>{microError || '请确认对应子应用服务已经启动。'}</span>
+            <strong>{failureHint.title}</strong>
+            <span>{failureHint.message}</span>
+            <dl>
+              <div>
+                <dt>入口地址</dt>
+                <dd>{failureHint.entry}</dd>
+              </div>
+              <div>
+                <dt>启动命令</dt>
+                <dd>{failureHint.command}</dd>
+              </div>
+            </dl>
           </section>
         )}
 

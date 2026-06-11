@@ -1,8 +1,6 @@
 <script setup>
-import { onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { defineAsyncComponent, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import RuleDia from './ruleDia.vue'
-import ImportResultDialog from '../warnboce/ImportResultDialog.vue'
 import {
   createTfAlarmRuleApi,
   deleteTfAlarmRuleApi,
@@ -12,6 +10,10 @@ import {
   fetchTfAlarmRuleImportResultApi,
   fetchTfAlarmRuleListApi
 } from '@/api/trafficForwarding'
+
+// 两个弹窗只在用户创建/编辑/查看导入结果时才需要，改为异步组件减少列表页初始 chunk。
+const RuleDia = defineAsyncComponent(() => import('./ruleDia.vue'))
+const ImportResultDialog = defineAsyncComponent(() => import('../warnboce/ImportResultDialog.vue'))
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50]
 const DEFAULT_PAGE_SIZE = 10
@@ -537,7 +539,11 @@ async function onDelete(row) {
       @submit="onSubmit"
     />
 
-    <ImportResultDialog v-model="importResultVisible" :result="importResultData" />
+    <ImportResultDialog
+      v-if="importResultVisible"
+      v-model="importResultVisible"
+      :result="importResultData"
+    />
   </div>
 </template>
 

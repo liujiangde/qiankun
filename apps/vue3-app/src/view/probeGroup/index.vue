@@ -2,11 +2,10 @@
 /**
  * 探针分组管理：工具栏筛选、分页表格、新增/编辑分组弹窗、启停与删除。
  */
-import { onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { defineAsyncComponent, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Upload, EditPen, Delete, View, Search } from '@element-plus/icons-vue'
-import AddProbeGroupDialog from './AddProbeGroupDialog.vue'
 import {
   createProbeGroupApi,
   deleteProbeGroupApi,
@@ -17,6 +16,9 @@ import {
   stopProbeGroupApi,
   updateProbeGroupApi
 } from '@/api/probeGroup'
+
+// 新增/编辑分组弹窗包含规则匹配和采集器选择，体积较大；只在打开弹窗时按需加载。
+const AddProbeGroupDialog = defineAsyncComponent(() => import('./AddProbeGroupDialog.vue'))
 
 const router = useRouter()
 
@@ -569,6 +571,7 @@ function statusTagType(status) {
 
     <!-- 新增/编辑：两步表单，规则匹配采集器见子组件 -->
     <AddProbeGroupDialog
+      v-if="createVisible"
       v-model="createVisible"
       :region-options="regionOptions"
       :type-options="typeOptions"

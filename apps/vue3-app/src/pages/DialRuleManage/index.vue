@@ -1,8 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { defineAsyncComponent, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Upload, EditPen, Delete } from '@element-plus/icons-vue'
-import CreateRuleDialog from './CreateRuleDialog.vue'
 import {
   createDialRuleApi,
   deleteDialRuleApi,
@@ -11,6 +10,9 @@ import {
   stopDialRuleApi,
   updateDialRuleApi
 } from '@/api/dial'
+
+// 创建/编辑拨测规则弹窗较重，列表页先异步加载，打开弹窗时再下载组件代码。
+const CreateRuleDialog = defineAsyncComponent(() => import('./CreateRuleDialog.vue'))
 
 const poolOptions = [
   { label: '拨测池A1', value: '拨测池A1' },
@@ -316,11 +318,13 @@ function onBatchImport() {
     </el-card>
 
     <CreateRuleDialog
+      v-if="createVisible"
       v-model="createVisible"
       :pool-options="poolOptions"
       @submit="onCreateSubmit"
     />
     <CreateRuleDialog
+      v-if="editVisible"
       v-model="editVisible"
       title="修改拨测规则"
       :pool-options="poolOptions"
